@@ -1,11 +1,8 @@
 """The device page.  Run:  streamlit run page/app.py   (from the repo root)
 
-Laid out as a case file: the counts against the device, the evidence behind each count, and why each
-piece of evidence can be trusted. Built phone-first, because most people arrive from a text message.
-
-Every number opens the exact FDA reports behind it. Every model flag says why it was raised: the
-sentence it read, the words that moved the score, similar confirmed cases, and how often a score that
-high has been right.
+A full-width dashboard with five tabs: Overview, Evidence, Timeline, Recalls & filing, Trust.
+Every number opens the FDA reports behind it, and every model flag says why it was raised.
+Explanations are precomputed by pipeline/explain.py, so the page loads no model.
 """
 import html
 import json
@@ -21,80 +18,67 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, ROOT)
 from service import record  # noqa: E402
 
-ACCENT, INK, MUTED, PAPER, LINE = "#b3261e", "#1d2433", "#8a8f9c", "#faf8f3", "#e3ddd0"
-EVENT_COLORS = {"Death": ACCENT, "Injury": "#d9893d", "Malfunction": "#b9bdc7", "Other": "#d7d9de",
-                "Not given": "#e7e8eb"}
+BLUE, RED, INK, GREY, LIGHT, LINE = "#2563eb", "#dc2626", "#111827", "#6b7280", "#cbd5e1", "#e5e7eb"
+EVENT_COLORS = {"Death": RED, "Injury": "#f59e0b", "Malfunction": "#cbd5e1", "Other": "#e2e8f0", "Not given": "#f1f5f9"}
 METRICS = "https://github.com/HackathonPrinceton/rapsheet/blob/main/eval/metrics.md"
-LINKS = {"fda_url": st.column_config.LinkColumn("FDA page", display_text="open"),
-         "fda_api_url": st.column_config.LinkColumn("Raw data", display_text="json")}
-DEATH_PHRASES = re.compile(
-    r"did not survive|not survive|died|passed away|deceased|expired|not (?:be )?resuscitated|"
-    r"pronounced|death|fatal|demise|succumbed", re.I)
+LINKS = {"fda_url": st.column_config.LinkColumn("FDA page", display_text="open ↗"),
+         "fda_api_url": st.column_config.LinkColumn("Raw", display_text="json")}
+DEATH_PHRASES = re.compile(r"did not survive|not survive|died|passed away|deceased|expired|not (?:be )?resuscitated|"
+                           r"pronounced|death|fatal|demise|succumbed", re.I)
 
-st.set_page_config(page_title="Rap Sheet", page_icon="📋", layout="centered")
-
-# ---------------------------------------------------------------- style
+st.set_page_config(page_title="Rap Sheet", page_icon="◉", layout="wide")
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;650;800&display=swap');
-html, body, [class*="css"], .stMarkdown, p, li {{ font-family: 'Inter', sans-serif; }}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+html, body, [class*="css"], p, li, label {{ font-family: 'Inter', sans-serif; }}
 #MainMenu, footer, header [data-testid="stToolbar"] {{ visibility: hidden; }}
-.block-container {{ padding-top: 1.2rem; padding-bottom: 3rem; max-width: 760px; }}
-.mono {{ font-family: 'IBM Plex Mono', monospace; letter-spacing: .04em; }}
-.kicker {{ font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .14em;
-          text-transform: uppercase; color: {MUTED}; }}
-.brand {{ font-family: 'IBM Plex Mono', monospace; font-weight: 600; letter-spacing: .3em; font-size: .8rem;
-         color: {INK}; border-bottom: 2px solid {INK}; display: inline-block; padding-bottom: 2px; }}
-.title {{ font-size: 2.1rem; font-weight: 800; line-height: 1.1; margin: .5rem 0 .25rem; color: {INK}; }}
-.sub {{ color: #4a5163; font-size: .95rem; }}
-.stamps {{ margin: .8rem 0 .2rem; display: flex; flex-wrap: wrap; gap: .45rem; }}
-.stamp {{ font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: .78rem; letter-spacing: .08em;
-         text-transform: uppercase; padding: .28rem .6rem; border: 2px solid {ACCENT}; color: {ACCENT};
-         border-radius: 3px; transform: rotate(-1.5deg); background: rgba(179,38,30,.04); }}
-.stamp.calm {{ border-color: {MUTED}; color: #5d6372; background: transparent; transform: none; }}
-.section {{ margin: 2.2rem 0 .6rem; padding-top: .6rem; border-top: 2px solid {INK}; }}
-.section h2 {{ font-size: 1.25rem; font-weight: 800; margin: .3rem 0 .2rem; color: {INK}; }}
-.section p {{ color: #4a5163; font-size: .9rem; margin: 0; }}
-.counts {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .7rem; margin-top: .8rem; }}
-.count {{ background: white; border: 1px solid {LINE}; border-left: 5px solid {INK}; border-radius: 6px;
-         padding: .85rem 1rem .8rem; }}
-.count.hot {{ border-left-color: {ACCENT}; }}
-.count .n {{ font-size: 2.2rem; font-weight: 800; line-height: 1; color: {INK}; margin: .35rem 0 .3rem; }}
-.count.hot .n {{ color: {ACCENT}; }}
-.count .what {{ font-size: .88rem; color: {INK}; line-height: 1.35; }}
-.count .how {{ font-size: .78rem; color: {MUTED}; margin-top: .45rem; line-height: 1.35; }}
-.count a {{ font-size: .82rem; font-weight: 600; color: {ACCENT}; text-decoration: none; display: inline-block;
-           margin-top: .5rem; }}
-.card {{ background: white; border: 1px solid {LINE}; border-radius: 8px; padding: 1rem 1.05rem; margin: .8rem 0; }}
-.card .head {{ display: flex; justify-content: space-between; flex-wrap: wrap; gap: .3rem; align-items: baseline; }}
-.tag {{ font-family: 'IBM Plex Mono', monospace; font-size: .72rem; padding: .12rem .45rem; border-radius: 3px;
-       background: #eef0f3; color: #4a5163; }}
-.tag.red {{ background: rgba(179,38,30,.1); color: {ACCENT}; font-weight: 600; }}
-.quote {{ font-family: 'IBM Plex Mono', monospace; font-size: .8rem; line-height: 1.55; color: #2b3242;
-         background: #fbfaf7; border-left: 3px solid {LINE}; padding: .6rem .75rem; margin: .7rem 0; }}
-.quote mark {{ background: rgba(179,38,30,.16); color: {ACCENT}; font-weight: 600; padding: 0 .1rem; }}
-.witnesses {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin: .6rem 0; }}
-.w {{ border: 1px solid {LINE}; border-radius: 6px; padding: .45rem .5rem; font-size: .74rem; line-height: 1.3; }}
-.w b {{ display: block; font-size: .82rem; margin-top: .15rem; }}
-.w.yes b {{ color: {ACCENT}; }} .w.no b {{ color: #5d6372; }}
-.why {{ font-size: .8rem; color: #4a5163; margin-top: .5rem; }}
-.bar {{ display: flex; align-items: center; gap: .45rem; margin: .18rem 0; font-size: .78rem; }}
-.bar .t {{ flex: 0 0 38%; text-align: right; font-family: 'IBM Plex Mono', monospace; overflow: hidden;
-          white-space: nowrap; text-overflow: ellipsis; }}
-.bar .b {{ height: .55rem; border-radius: 2px; }}
-.trust {{ background: #f4f1ea; border-radius: 6px; padding: .55rem .7rem; font-size: .82rem; margin-top: .6rem; }}
-.small {{ font-size: .78rem; color: {MUTED}; }}
-a.fda {{ font-size: .82rem; font-weight: 600; color: {ACCENT}; text-decoration: none; }}
-.funnel {{ display: grid; gap: .3rem; margin: .6rem 0; }}
-.funnel div {{ background: {INK}; color: white; border-radius: 4px; padding: .35rem .6rem; font-size: .82rem; }}
-@media (max-width: 640px) {{
-  .title {{ font-size: 1.7rem; }}
-  .count .n {{ font-size: 2rem; }}
-  .w {{ font-size: .68rem; padding: .4rem .4rem; }} .w b {{ font-size: .74rem; }}
-  .bar .t {{ flex-basis: 48%; }}
-}}
-</style>
-""", unsafe_allow_html=True)
+.block-container {{ padding: 1rem 2.2rem 2rem; max-width: 100%; }}
+.logo {{ font-weight: 800; font-size: 1.15rem; color: {INK}; display: flex; align-items: center; gap: .45rem; padding-top: .45rem; }}
+.logo .dot {{ width: .8rem; height: .8rem; border-radius: 50%; background: {BLUE}; box-shadow: 0 0 0 4px #dbeafe; }}
+.devhead {{ display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem;
+           padding: .9rem 0 .2rem; border-top: 1px solid {LINE}; margin-top: .6rem; }}
+.devname {{ font-size: 1.7rem; font-weight: 800; color: {INK}; line-height: 1.15; }}
+.devsub {{ color: {GREY}; font-size: .9rem; margin-top: .15rem; }}
+.pills {{ display: flex; gap: .4rem; flex-wrap: wrap; }}
+.pill {{ font-size: .8rem; font-weight: 600; padding: .3rem .7rem; border-radius: 999px; background: #f3f4f6; color: #374151; }}
+.pill.red {{ background: #fee2e2; color: #b91c1c; }} .pill.blue {{ background: #dbeafe; color: #1d4ed8; }}
+.kpis {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: .9rem; margin: .4rem 0 1rem; }}
+.kpi {{ background: #f8fafc; border: 1px solid {LINE}; border-radius: 12px; padding: .9rem 1.1rem; }}
+.kpi .v {{ font-size: 2rem; font-weight: 800; color: {INK}; line-height: 1.1; }}
+.kpi.red .v {{ color: {RED}; }}
+.kpi .l {{ font-size: .86rem; font-weight: 600; color: #374151; margin-top: .2rem; }}
+.kpi .s {{ font-size: .76rem; color: {GREY}; margin-top: .25rem; }}
+.panel {{ background: white; border: 1px solid {LINE}; border-radius: 12px; padding: 1rem 1.15rem; }}
+.ptitle {{ font-size: .78rem; font-weight: 700; color: {GREY}; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .5rem; }}
+.quote {{ font-size: .88rem; line-height: 1.55; color: #1f2937; background: #f8fafc; border-left: 3px solid {RED};
+         border-radius: 6px; padding: .65rem .8rem; margin: .4rem 0 .7rem; }}
+.quote mark {{ background: #fee2e2; color: #b91c1c; font-weight: 700; padding: 0 .12rem; border-radius: 3px; }}
+.wit {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: .3rem 0 .8rem; }}
+.w {{ border: 1px solid {LINE}; border-radius: 10px; padding: .5rem .65rem; font-size: .76rem; color: {GREY}; }}
+.w b {{ display: block; font-size: .9rem; color: {INK}; margin-top: .1rem; }}
+.w.yes {{ border-color: #fecaca; background: #fef2f2; }} .w.yes b {{ color: {RED}; }}
+.bar {{ display: flex; align-items: center; gap: .5rem; margin: .22rem 0; font-size: .8rem; }}
+.bar .t {{ flex: 0 0 34%; text-align: right; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.bar .b {{ height: .6rem; border-radius: 4px; }}
+.bar .n {{ color: {GREY}; font-size: .74rem; }}
+.trust {{ background: #eff6ff; color: #1e3a8a; border-radius: 10px; padding: .6rem .8rem; font-size: .85rem; margin-top: .7rem; }}
+.near {{ font-size: .8rem; color: #374151; margin-top: .6rem; }}
+.near i {{ color: {GREY}; }}
+a.btn {{ display: inline-block; margin-top: .7rem; font-size: .85rem; font-weight: 600; color: {BLUE}; text-decoration: none; }}
+.flow {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: .6rem; }}
+.step {{ background: #f8fafc; border: 1px solid {LINE}; border-radius: 12px; padding: .8rem; position: relative; }}
+.step .v {{ font-size: 1.35rem; font-weight: 800; color: {BLUE}; }}
+.step .l {{ font-size: .8rem; color: #374151; margin-top: .2rem; }}
+.rc {{ background: white; border: 1px solid {LINE}; border-radius: 12px; padding: .85rem 1rem; height: 100%; }}
+.rc .top {{ display: flex; justify-content: space-between; font-size: .8rem; color: {GREY}; }}
+.rc .r {{ font-size: .9rem; color: {INK}; margin: .45rem 0; }}
+.rc .f {{ font-size: .76rem; color: {GREY}; }}
+.stTabs [data-baseweb="tab-list"] {{ gap: .3rem; border-bottom: 1px solid {LINE}; }}
+.stTabs [data-baseweb="tab"] {{ height: 2.6rem; padding: 0 1.1rem; font-weight: 600; }}
+.note {{ font-size: .78rem; color: {GREY}; }}
+@media (max-width: 900px) {{ .kpis, .flow {{ grid-template-columns: repeat(2, 1fr); }} .wit {{ grid-template-columns: 1fr; }}
+  .block-container {{ padding: .8rem 1rem; }} }}
+</style>""", unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------- cached data
@@ -147,380 +131,353 @@ def load_json(name):
         return json.load(f)
 
 
-def esc(text) -> str:
-    return html.escape(str(text or ""))
+def esc(x) -> str:
+    return html.escape(str(x if x is not None else ""))
 
 
-def marked(text: str, extra: list[str] = ()) -> str:
-    """Escape a passage and highlight the phrases that state a death (and any extra terms)."""
-    out = esc(text)
-    terms = sorted({t for t in extra if len(t) > 3}, key=len, reverse=True)
-    pattern = DEATH_PHRASES.pattern + ("|" + "|".join(re.escape(esc(t)) for t in terms) if terms else "")
-    return re.sub(f"({pattern})", r"<mark>\1</mark>", out, flags=re.I)
+def marked(text: str) -> str:
+    return DEATH_PHRASES.sub(lambda m: f"<mark>{m.group(0)}</mark>", esc(text))
 
 
-def section(anchor: str, title: str, blurb: str = ""):
-    st.markdown(f'<div class="section" id="{anchor}"><div class="kicker">{anchor.replace("-", " ")}</div>'
-                f'<h2>{title}</h2>{"<p>" + blurb + "</p>" if blurb else ""}</div>', unsafe_allow_html=True)
-
-
-def report_table(rows: list[dict], cols: list[str], height: int = 300):
+def table(rows, cols, height=380):
     if not rows:
-        st.write("No reports.")
+        st.caption("No reports.")
         return
-    st.dataframe(pd.DataFrame(rows)[cols + ["fda_url", "fda_api_url"]], hide_index=True,
-                 width="stretch", height=min(height, 40 + 35 * len(rows)), column_config=LINKS)
+    st.dataframe(pd.DataFrame(rows)[cols + ["fda_url", "fda_api_url"]], hide_index=True, width="stretch",
+                 height=min(height, 40 + 35 * len(rows)), column_config=LINKS)
 
 
-# ---------------------------------------------------------------- which device
+def chart_cfg(c, height):
+    return (c.properties(height=height).configure_view(stroke=None)
+            .configure_axis(labelColor=GREY, domainColor=LINE, gridColor="#f1f5f9", labelFont="Inter", titleFont="Inter")
+            .configure_legend(labelFont="Inter", labelFontSize=12, symbolType="circle"))
+
+
+# ---------------------------------------------------------------- top bar
 using_sample = not has_data()
 key = st.query_params.get("d")
-st.markdown('<span class="brand">RAP SHEET</span>', unsafe_allow_html=True)
-
-if not key or using_sample:
-    st.caption("The safety record of a medical device, from the FDA's public reports. "
-               "Every number opens the reports it was counted from.")
-    q = st.text_input("Device name", placeholder="for example: LIFEPAK CR2, HeartStart FRx, DreamStation")
-    if q and not using_sample:
-        matches = search(q)
-        if not matches:
-            st.warning("No device found with that name. Try the model name printed on the label.")
-        else:
-            pick = st.radio("Which one?", matches,
-                            format_func=lambda m: f"{m['brand']} · {m['manufacturer'].title()} · {m['n']:,} reports")
-            key = pick["device_key"]
+c_logo, c_search, c_pick = st.columns([1.1, 2.4, 2.5])
+c_logo.markdown('<div class="logo"><span class="dot"></span>Rap Sheet</div>', unsafe_allow_html=True)
+q = c_search.text_input("Search a device", placeholder="Search a device: LIFEPAK CR2, HeartStart FRx, DreamStation",
+                        label_visibility="collapsed")
+if q and not using_sample:
+    matches = search(q)
+    if not matches:
+        c_pick.caption("No device with that name. Try the model name printed on the label.")
+    else:
+        pick = c_pick.selectbox("Matches", matches, label_visibility="collapsed",
+                                format_func=lambda m: f"{m['brand']} · {m['manufacturer'].title()} · {m['n']:,} reports")
+        key = pick["device_key"]
 
 rec = record.sample_record() if using_sample else (build(key) if key else None)
 if using_sample:
     st.warning("Showing made-up example data. Run the pipeline to load real FDA reports.")
 if not rec:
+    st.markdown("<div style='padding:4rem 0;text-align:center;color:#6b7280'>"
+                "<div style='font-size:1.6rem;font-weight:800;color:#111827'>The safety record of any medical device</div>"
+                "<div style='margin-top:.5rem'>Search a device above. Every number comes from the FDA's public reports "
+                "and links to them.</div></div>", unsafe_allow_html=True)
     st.stop()
 
 d, t, m = rec["device"], rec["totals"], rec["manufacturer"]
 maker = " ".join(w for w in d["manufacturer"].split() if not w.isdigit()).title()
 explain = load_json("explanations.json")
 gold = load_json("gold_results.json")
+reps = explain.get("reports", {})
 cal = explain.get("meta", {}).get("calibration", {}).get("hand_checked", [])
 top_band = cal[-1] if cal else None
 clf = gold.get("methods", {}).get("classifier", {})
 kw = gold.get("methods", {}).get("death word", {})
-
-# ---------------------------------------------------------------- header
-kind = {"MKJ": "Automated external defibrillator", "BZD": "CPAP / BiPAP machine"}.get(d["product_code"], "Medical device")
-st.markdown(
-    f'<div class="kicker" style="margin-top:.9rem">FDA device record · {esc(kind)} · code {esc(d["product_code"])}</div>'
-    f'<div class="title">{esc(d["brand"])}</div>'
-    f'<div class="sub">Made by <b>{esc(maker)}</b> · {t["reports"]:,} reports to the FDA, '
-    f'{esc(rec["period"]["first"][:7])} to {esc(rec["period"]["last"][:7])}</div>', unsafe_allow_html=True)
-
-stamps = []
-open_recalls = [r for r in rec["recalls"] if "terminated" not in (r["status"] or "").lower()]
-if open_recalls:
-    stamps.append(f'<span class="stamp">{len(open_recalls)} open recall{"s" if len(open_recalls) != 1 else ""}</span>')
-elif rec["recalls"]:
-    stamps.append(f'<span class="stamp calm">{len(rec["recalls"])} past recall{"s" if len(rec["recalls"]) != 1 else ""}</span>')
-else:
-    stamps.append('<span class="stamp calm">No recalls matched</span>')
-if t.get("hidden_death_model_ran") and t["deaths_hidden"]:
-    stamps.append(f'<span class="stamp">{t["deaths_hidden"]} deaths filed as something else</span>')
-stamps.append('<span class="stamp">Reports rising</span>' if rec["warning"]["spiking_now"]
-              else '<span class="stamp calm">Reports steady</span>')
-st.markdown(f'<div class="stamps">{"".join(stamps)}</div>', unsafe_allow_html=True)
-st.caption("A report is an allegation, not proof the device caused harm. Do not stop using a device because "
-           "of this page" + ("; keep an AED in service unless the manufacturer says otherwise." if d["product_code"] == "MKJ" else "."))
-
-# ---------------------------------------------------------------- the counts
 hidden_n = t["deaths_hidden"] if t.get("hidden_death_model_ran") else None
-trust_line = (f"Found by reading each report. Checked by hand: right {clf.get('true_pos', 15)} times in "
-              f"{clf.get('true_pos', 15) + clf.get('false_pos', 1)}." if clf else "Found by reading each report's text.")
-late = f"{m['pct_late']:g}%" if m.get("pct_late") is not None else "n/a"
-st.markdown(f"""
-<div class="counts">
-  <div class="count">
-    <div class="kicker">Count 1</div><div class="n">{t['deaths_coded']:,}</div>
-    <div class="what">reports filed as a <b>death</b>.</div>
-    <div class="how">Counted straight from the FDA's event type. No model.</div>
-    <a href="#evidence">Check the reports ↓</a>
-  </div>
-  <div class="count hot">
-    <div class="kicker">Count 2</div><div class="n">{hidden_n if hidden_n is not None else "–"}</div>
-    <div class="what">more say the patient died, but were filed as a <b>malfunction or injury</b>.</div>
-    <div class="how">{esc(trust_line)}</div>
-    <a href="#evidence">See the evidence ↓</a>
-  </div>
-  <div class="count">
-    <div class="kicker">Count 3</div><div class="n">{late}</div>
-    <div class="what">of {esc(maker)}'s reports reached the FDA <b>after the 30-day legal deadline</b>.</div>
-    <div class="how">Date rule: maker learned of it → FDA received it.</div>
-    <a href="#late-filing">How this was worked out ↓</a>
-  </div>
-</div>""", unsafe_allow_html=True)
+open_recalls = [r for r in rec["recalls"] if "terminated" not in (r["status"] or "").lower()]
 
-# ---------------------------------------------------------------- timeline
-section("timeline", "Reports over time",
-        "Each bar is a month of reports, coloured by how they were filed. Recalls and months where reports "
-        "jumped are labelled on the chart.")
-if using_sample:
-    months = pd.DataFrame(rec["months"]).rename(columns={"n_reports": "n"}).assign(event_type="All reports")
-else:
-    months = pd.DataFrame(months_by_type(rec["device_key"]))
-    months["event_type"] = months["event_type"].where(months["event_type"].isin(EVENT_COLORS), "Other")
-if not months.empty:
+# ---------------------------------------------------------------- device header
+kind = {"MKJ": "Defibrillator (AED)", "BZD": "CPAP / BiPAP machine"}.get(d["product_code"], "Medical device")
+pills = []
+if open_recalls:
+    pills.append(f'<span class="pill red">● {len(open_recalls)} open recall{"s" if len(open_recalls) != 1 else ""}</span>')
+if hidden_n:
+    pills.append(f'<span class="pill red">{hidden_n} deaths filed as something else</span>')
+pills.append('<span class="pill red">Reports rising</span>' if rec["warning"]["spiking_now"]
+             else '<span class="pill">Reports steady</span>')
+pills.append(f'<span class="pill blue">{esc(kind)}</span>')
+st.markdown(f"""<div class="devhead"><div><div class="devname">{esc(d['brand'])}</div>
+  <div class="devsub">{esc(maker)} · {t['reports']:,} FDA reports · {esc(rec['period']['first'][:7])} to {esc(rec['period']['last'][:7])}</div></div>
+  <div class="pills">{''.join(pills)}</div></div>""", unsafe_allow_html=True)
+
+tab_over, tab_ev, tab_time, tab_rec, tab_trust = st.tabs(
+    ["Overview", f"Evidence ({hidden_n or 0})", "Timeline", "Recalls & filing", "Why trust this"])
+
+
+# ---------------------------------------------------------------- shared pieces
+def kpis():
+    late = f"{m['pct_late']:g}%" if m.get("pct_late") is not None else "–"
+    acc = f"Hand-checked: right {clf['true_pos']} of {clf['true_pos'] + clf['false_pos']}" if clf else "Found in report text"
+    st.markdown(f"""<div class="kpis">
+      <div class="kpi"><div class="v">{t['deaths_coded']:,}</div><div class="l">Deaths filed as deaths</div>
+        <div class="s">From the FDA's event type</div></div>
+      <div class="kpi red"><div class="v">{hidden_n if hidden_n is not None else '–'}</div>
+        <div class="l">Deaths filed as malfunction or injury</div><div class="s">{esc(acc)}</div></div>
+      <div class="kpi"><div class="v">{late}</div><div class="l">Maker's reports filed late</div>
+        <div class="s">After the 30-day legal deadline</div></div>
+      <div class="kpi"><div class="v">{len(rec['recalls'])}</div><div class="l">Recalls for this model</div>
+        <div class="s">{len(open_recalls)} still open</div></div></div>""", unsafe_allow_html=True)
+
+
+def timeline_chart(height=280, labels=True):
+    if using_sample:
+        months = pd.DataFrame(rec["months"]).rename(columns={"n_reports": "n"}).assign(event_type="Malfunction")
+    else:
+        months = pd.DataFrame(months_by_type(rec["device_key"]))
+        months["event_type"] = months["event_type"].where(months["event_type"].isin(EVENT_COLORS), "Other")
+    if months.empty:
+        st.caption("No reports.")
+        return
     months["date"] = pd.to_datetime(months["month"] + "-01")
-    domain = [k for k in EVENT_COLORS if k in set(months["event_type"])] or ["All reports"]
-    top = months.groupby("date")["n"].sum().max()
-    bars = alt.Chart(months).mark_bar(width=2.2).encode(
-        x=alt.X("date:T", title=None, axis=alt.Axis(format="%Y", tickCount="year", grid=False)),
-        y=alt.Y("sum(n):Q", title=None, axis=alt.Axis(grid=True, gridColor="#ece7dc", tickCount=4, minExtent=34)),
-        color=alt.Color("event_type:N", title=None, scale=alt.Scale(domain=domain,
-                        range=[EVENT_COLORS.get(k, MUTED) for k in domain]),
-                        legend=alt.Legend(orient="bottom", direction="horizontal", symbolType="square")),
+    lo, hi = months["date"].min(), months["date"].max() + pd.offsets.MonthEnd(0)
+    xs = alt.Scale(domain=[lo.isoformat(), hi.isoformat()])
+    domain = [k for k in EVENT_COLORS if k in set(months["event_type"])]
+    layers = [alt.Chart(months).mark_bar(width=3, cornerRadiusTopLeft=1, cornerRadiusTopRight=1).encode(
+        x=alt.X("date:T", title=None, scale=xs, axis=alt.Axis(format="%Y", tickCount="year", grid=False)),
+        y=alt.Y("sum(n):Q", title=None, axis=alt.Axis(tickCount=4, minExtent=120, maxExtent=120)),
+        color=alt.Color("event_type:N", title=None, scale=alt.Scale(domain=domain, range=[EVENT_COLORS[k] for k in domain]),
+                        legend=alt.Legend(orient="top-left", direction="horizontal")),
         order=alt.Order("event_type:N"),
         tooltip=[alt.Tooltip("date:T", title="Month", format="%b %Y"), alt.Tooltip("event_type:N", title="Filed as"),
-                 alt.Tooltip("n:Q", title="Reports")])
-    layers = [bars]
-    first = months["date"].min()
+                 alt.Tooltip("n:Q", title="Reports")])]
     recalls = pd.DataFrame([{"date": pd.to_datetime(r["date"]), "label": f"Recall {r['number']}",
-                             "reason": (r["reason"] or "")[:120]}
-                            for r in rec["recalls"] if r.get("date") and pd.to_datetime(r["date"]) >= first])
+                             "reason": (r["reason"] or "")[:140]}
+                            for r in rec["recalls"] if r.get("date") and pd.to_datetime(r["date"]) >= lo])
     if not recalls.empty:
-        layers += [
-            alt.Chart(recalls).mark_rule(color=INK, strokeDash=[5, 3], size=1.6).encode(
-                x="date:T", tooltip=["label:N", "reason:N"]),
-            alt.Chart(recalls).mark_text(angle=270, align="right", baseline="bottom", dx=-2, dy=-3, fontSize=10,
-                                         color=INK, font="IBM Plex Mono").encode(
-                x="date:T", y=alt.value(0), text="label:N")]
+        layers.append(alt.Chart(recalls).mark_rule(color=BLUE, strokeDash=[6, 4], size=2).encode(
+            x="date:T", tooltip=["label:N", "reason:N"]))
+        if labels:
+            layers.append(alt.Chart(recalls).mark_text(align="left", dx=5, dy=8, fontSize=11, color=BLUE,
+                                                       fontWeight=600).encode(x="date:T", y=alt.value(0), text="label:N"))
     spikes = pd.DataFrame([{"date": pd.to_datetime(x["month"] + "-01")} for x in rec["months"] if x.get("spike")])
     if not spikes.empty:
-        totals = months.groupby("date")["n"].sum().rename("n").reset_index()
-        spikes = spikes.merge(totals, on="date", how="left").fillna(0)
-        biggest = spikes.sort_values("n").tail(1).assign(
-            t="reports rising now" if rec["warning"]["spiking_now"] else "jump in reports")
-        layers += [
-            alt.Chart(spikes).mark_point(shape="triangle-down", filled=True, size=45, color=ACCENT, yOffset=-7)
-            .encode(x="date:T", y="n:Q", tooltip=alt.value("Reports far above this device's usual level")),
-            alt.Chart(biggest).mark_text(align="right", dx=-7, dy=-7, fontSize=10, color=ACCENT,
-                                         font="IBM Plex Mono", fontWeight="bold").encode(
-                x="date:T", y="n:Q", text="t:N")]
-    lo, hi = months["date"].min(), months["date"].max() + pd.offsets.MonthEnd(0)
-    xscale = alt.Scale(domain=[lo.isoformat(), hi.isoformat()])
-    axis_cfg = dict(labelFont="IBM Plex Mono", labelColor=MUTED, domainColor=LINE)
-    st.altair_chart(alt.layer(*layers).resolve_scale(color="independent").encode(x=alt.X(scale=xscale))
-                    .properties(height=230).configure_view(stroke=None).configure_axis(**axis_cfg)
-                    .configure_axisY(minExtent=34).configure_legend(labelFont="Inter", labelFontSize=11),
-                    width="stretch")
+        tot = months.groupby("date")["n"].sum().rename("n").reset_index()
+        spikes = spikes.merge(tot, on="date", how="left").fillna(0)
+        layers.append(alt.Chart(spikes).mark_point(shape="triangle-down", filled=True, size=60, color="#f59e0b",
+                                                   yOffset=-8).encode(
+            x="date:T", y="n:Q", tooltip=alt.value("Reports far above this device's usual level")))
+    st.altair_chart(chart_cfg(alt.layer(*layers), height), width="stretch")
 
-    # A strip under the bars: months with a death, filed as a death (ink) or found in the text (red).
     dm = pd.DataFrame(rec["months"])
     if not dm.empty and {"n_deaths_coded", "n_deaths_hidden"} <= set(dm.columns):
         dm["date"] = pd.to_datetime(dm["month"] + "-01")
-        long = pd.concat([dm[["date"]].assign(row="filed as death", n=dm["n_deaths_coded"]),
-                          dm[["date"]].assign(row="text says died", n=dm["n_deaths_hidden"])])
+        long = pd.concat([dm[["date"]].assign(row="Filed as death", n=dm["n_deaths_coded"]),
+                          dm[["date"]].assign(row="Filed as malfunction", n=dm["n_deaths_hidden"])])
         long = long[long["n"] > 0]
         if not long.empty:
-            st.markdown(f'<div class="small" style="margin:-.3rem 0 -.4rem 2.4rem">Deaths: '
-                        f'<span style="color:{INK}">● filed as a death</span> &nbsp; '
-                        f'<span style="color:{ACCENT}">● filed as malfunction, text says died</span></div>',
-                        unsafe_allow_html=True)
             strip = alt.Chart(long).mark_circle(opacity=.85).encode(
-                x=alt.X("date:T", title=None, scale=xscale,
-                        axis=alt.Axis(format="%Y", tickCount="year", grid=False, domain=False)),
-                y=alt.Y("row:N", title=None, sort=["filed as death", "text says died"],
-                        axis=alt.Axis(labels=False, ticks=False, domain=False, minExtent=34)),
-                size=alt.Size("n:Q", legend=None, scale=alt.Scale(range=[16, 110])),
-                color=alt.Color("row:N", legend=None, scale=alt.Scale(
-                    domain=["filed as death", "text says died"], range=[INK, ACCENT])),
+                x=alt.X("date:T", title=None, scale=xs, axis=alt.Axis(labels=False, ticks=False, domain=False, grid=False)),
+                y=alt.Y("row:N", title=None, sort=["Filed as death", "Filed as malfunction"],
+                        axis=alt.Axis(minExtent=120, maxExtent=120, labelFontSize=11, labelLimit=118, domain=False, ticks=False)),
+                size=alt.Size("n:Q", legend=None, scale=alt.Scale(range=[20, 160])),
+                color=alt.Color("row:N", legend=None, scale=alt.Scale(domain=["Filed as death", "Filed as malfunction"],
+                                                                      range=["#374151", RED])),
                 tooltip=[alt.Tooltip("date:T", title="Month", format="%b %Y"), alt.Tooltip("row:N", title="Deaths"),
                          alt.Tooltip("n:Q", title="Reports")])
-            st.altair_chart(strip.properties(height=66).configure_view(stroke=None).configure_axis(**axis_cfg),
-                            width="stretch")
-    st.caption("▼ marks a month whose reports were far "
-               "above this device's usual level. That is not a prediction of a recall: across 88 past recalls, such a "
-               "jump came first 49% of the time, against 36% by chance.")
-
-# ---------------------------------------------------------------- the evidence
-section("evidence", "The evidence",
-        "Reports whose text says the patient died, although they were filed as a malfunction or injury. "
-        "Each one shows what the model read, why it decided, and how often it is right.")
-reps = explain.get("reports", {})
-evidence = rec.get("evidence", [])
+            st.altair_chart(chart_cfg(strip, 70), width="stretch")
 
 
-def witness(label: str, value: str, yes: bool) -> str:
-    return f'<div class="w {"yes" if yes else "no"}">{label}<b>{value}</b></div>'
-
-
-def evidence_card(e: dict) -> str:
+def evidence_card(e: dict, compact=False):
     x = reps.get(e["report_number"], {})
-    passage = x.get("passage") or e.get("excerpt") or ""
-    up = x.get("words_up", [])
-    down = x.get("words_down", [])
-    scale = max([abs(w["weight"]) for w in up + down] + [0.01])
-    bars = "".join(
-        f'<div class="bar"><span class="t">{esc(w["term"])}</span>'
-        f'<span class="b" style="width:{max(4, 55 * abs(w["weight"]) / scale):.0f}%;'
-        f'background:{ACCENT if w["weight"] > 0 else MUTED}"></span>'
-        f'<span class="small">{"+" if w["weight"] > 0 else ""}{w["weight"]:.2f}</span></div>'
-        for w in up[:4] + down[:2])
+    passage = (x.get("passage") or e.get("excerpt") or "")
+    passage = passage[:300] + "…" if compact and len(passage) > 300 else passage
     wit = x.get("witnesses", {})
-    witnesses = (witness("Filed as", esc(e.get("coded_as") or "?"), False)
-                 + witness("Outcome field", "Death" if wit.get("outcome_field_says_death") else "Not death",
-                           bool(wit.get("outcome_field_says_death")))
-                 + witness("Report text", "Says the patient died", True))
-    near = x.get("similar_confirmed", [])
-    near_html = (f'<div class="why"><b>Reads like a confirmed case</b> ({esc(near[0]["source"])}): '
-                 f'<span class="mono" style="font-size:.74rem">"{esc(near[0]["text"][:160])}"</span></div>') if near else ""
+    od = bool(wit.get("outcome_field_says_death"))
+    witnesses = (f'<div class="w">Filed as<b>{esc(e.get("coded_as") or e.get("event_type"))}</b></div>'
+                 f'<div class="w {"yes" if od else ""}">Outcome field<b>{"Death" if od else "Not death"}</b></div>'
+                 f'<div class="w yes">Report text<b>Patient died</b></div>')
     prob = e.get("death_prob") or x.get("prob")
-    trust = (f'Model confidence {min(prob, 0.999):.1%}. Of reports scored this high and checked by a person, '
-             f'<b>{top_band["deaths"]} of {top_band["n"]}</b> really described a death.'
-             if prob is not None and top_band else "")
-    return f"""
-<div class="card">
-  <div class="head"><span class="mono" style="font-size:.8rem">Report {esc(e['report_number'])} · {esc(e.get('date'))}</span>
-    <span class="tag red">filed as {esc(e.get('coded_as'))}</span></div>
-  <div class="quote">{marked(passage[:520])}{'…' if len(passage) > 520 else ''}</div>
-  <div class="kicker">Three witnesses</div>
-  <div class="witnesses">{witnesses}</div>
-  {('<div class="kicker" style="margin-top:.5rem">Why the model flagged it</div>' + bars +
-    f'<div class="small" style="margin-top:.2rem">Red phrases push the model towards "the patient died", '
-    f'grey ones push away. The meaning of the passage as a whole pointed the same way.</div>') if up else ''}
-  {near_html}
-  <div class="trust">{trust}</div>
-  <div style="margin-top:.6rem"><a class="fda" href="{esc(e.get('fda_url'))}" target="_blank">Read the original FDA report ↗</a></div>
-</div>"""
+    trust = (f'Confidence {min(prob, 0.999):.1%} · reports scored this high were confirmed by a person '
+             f'<b>{top_band["deaths"]} of {top_band["n"]}</b> times' if prob is not None and top_band else "")
+    why = ""
+    if not compact:
+        up, down = x.get("words_up", [])[:4], x.get("words_down", [])[:2]
+        scale = max([abs(w["weight"]) for w in up + down] + [0.01])
+        why = '<div class="ptitle" style="margin-top:.2rem">Why the model flagged it</div>' + "".join(
+            f'<div class="bar"><span class="t">{esc(w["term"])}</span><span class="b" style="width:{max(3, 50 * abs(w["weight"]) / scale):.0f}%;'
+            f'background:{RED if w["weight"] > 0 else LIGHT}"></span><span class="n">{w["weight"]:+.2f}</span></div>'
+            for w in up + down)
+        near = x.get("similar_confirmed", [])
+        if near:
+            why += (f'<div class="near"><b>Similar confirmed case</b> <i>({esc(near[0]["source"])})</i><br>'
+                    f'"{esc(near[0]["text"][:170])}"</div>')
+    st.markdown(f"""<div class="panel">
+      <div class="ptitle">Report {esc(e['report_number'])} · {esc(e.get('date') or e.get('date_received'))}</div>
+      <div class="quote">{marked(passage)}</div>
+      <div class="wit">{witnesses}</div>{why}
+      <div class="trust">{trust}</div>
+      <a class="btn" href="{esc(e.get('fda_url'))}" target="_blank">Open the FDA report ↗</a></div>""",
+                unsafe_allow_html=True)
 
 
-if not t.get("hidden_death_model_ran"):
-    st.info("The text model has not scored this device yet.")
-elif not evidence:
-    st.write("The model found no reports like this for this device.")
-else:
-    st.markdown("".join(evidence_card(e) for e in evidence[:3]), unsafe_allow_html=True)
-    if not using_sample:
-        with st.expander(f"All {t['deaths_hidden']} flagged reports, with the model's score"):
-            report_table(reports(rec["device_key"], "deaths_hidden"),
-                         ["report_number", "date_received", "event_type", "death_prob", "excerpt"])
-if not using_sample:
-    with st.expander(f"All {t['deaths_coded']:,} reports filed as a death"):
-        report_table(reports(rec["device_key"], "deaths_coded"), ["report_number", "date_received", "event_type", "excerpt"])
-    outcome = t.get("deaths_outcome_field") or 0
-    with st.expander(f"Where the FDA's two death fields disagree: {outcome} reports"):
-        st.caption("Filed as a malfunction or injury, but the patient-outcome field says Death. A data-quality "
-                   "signal, not a death count: checked by hand, only about 1 in 3 of these describe a death.")
-        report_table(reports(rec["device_key"], "deaths_outcome_field"),
-                     ["report_number", "date_received", "event_type", "outcomes", "excerpt"])
+# ---------------------------------------------------------------- Overview
+with tab_over:
+    kpis()
+    left, right = st.columns([2.1, 1], gap="large")
+    with left:
+        st.markdown('<div class="ptitle">Reports per month · recalls in blue · ▼ unusual jump</div>', unsafe_allow_html=True)
+        timeline_chart(260, labels=False)
+    with right:
+        st.markdown('<div class="ptitle">Strongest evidence</div>', unsafe_allow_html=True)
+        if rec.get("evidence"):
+            evidence_card(rec["evidence"][0], compact=True)
+            st.caption(f"See all {hidden_n} in the Evidence tab.")
+        else:
+            st.caption("No deaths filed under another category were found for this device.")
+    st.caption("A report is an allegation, not proof the device caused harm. Do not stop using a device because of this page"
+               + ("; keep an AED in service unless the manufacturer says otherwise." if d["product_code"] == "MKJ" else "."))
 
-# ---------------------------------------------------------------- recalls
-section("recalls", "Recalls", f"{len(rec['recalls'])} recall{'s' if len(rec['recalls']) != 1 else ''} name this model.")
-match = rec.get("recall_match")
-for r in rec["recalls"]:
-    lead = next((e.get("lead_months") for e in rec.get("timeline", [])
-                 if e["kind"] == "recall" and e.get("number") == r["number"]), None)
-    before = (f"Reports had been rising {lead} months before." if lead else "No rise in reports was flagged in the two years before.")
-    st.markdown(f"""<div class="card"><div class="head"><span class="mono" style="font-size:.8rem">{esc(r['date'])} · {esc(r['number'])}</span>
-      <span class="tag {'red' if 'terminated' not in (r['status'] or '').lower() else ''}">{esc(r['status'])}</span></div>
-      <div style="margin-top:.45rem;font-size:.9rem">{esc(r['reason'])}</div>
-      <div class="small" style="margin-top:.4rem">{before}</div></div>""", unsafe_allow_html=True)
-if match and rec["recalls"]:
-    st.caption(f"How recalls were matched: the FDA lists recalls by device type, not model. We read all "
-               f"{match['recalls_checked']:,} recall records for code {d['product_code']} and kept those naming both "
-               f"the maker (\"{match['maker_word']}\") and the model (\"{match.get('phrase') or 'none'}\").")
-
-# ---------------------------------------------------------------- late filing
-section("late-filing", "Late filing", f"How the {late} was worked out, and how {esc(maker)} compares.")
-if not using_sample:
-    mr = pd.DataFrame(maker_reports(d["manufacturer"]))
-    if mr.empty:
-        st.write("No manufacturer reports with both dates.")
+# ---------------------------------------------------------------- Evidence
+with tab_ev:
+    if not t.get("hidden_death_model_ran"):
+        st.info("The text model has not scored this device yet.")
+    elif not rec.get("evidence"):
+        st.caption("No reports whose text says the patient died were filed as something else.")
     else:
-        mr["days"] = mr["days_to_report"].clip(upper=180)
-        hist = alt.Chart(mr).mark_bar(color="#b9bdc7").encode(
-            x=alt.X("days:Q", bin=alt.Bin(step=5), title="Days from maker learning of it to the FDA receiving it (180+ grouped)"),
-            y=alt.Y("count():Q", title=None))
-        rule = alt.Chart(pd.DataFrame({"x": [30]})).mark_rule(color=ACCENT, size=2).encode(x="x:Q")
-        lab = alt.Chart(pd.DataFrame({"x": [30], "t": ["30-day deadline"]})).mark_text(
-            align="left", dx=5, dy=-95, color=ACCENT, font="IBM Plex Mono", fontSize=11).encode(x="x:Q", text="t:N")
-        st.altair_chart((hist + rule + lab).properties(height=200).configure_view(stroke=None), width="stretch")
+        rows = reports(rec["device_key"], "deaths_hidden") if not using_sample else rec["evidence"]
+        df = pd.DataFrame(rows)
+        left, right = st.columns([1.15, 1.35], gap="large")
+        with left:
+            st.markdown(f'<div class="ptitle">{len(df)} reports: text says the patient died, filed as something else</div>',
+                        unsafe_allow_html=True)
+            def around(text):
+                text = str(text or "")
+                hit = DEATH_PHRASES.search(text)
+                if not hit:
+                    return text[:110]
+                a = max(0, hit.start() - 45)
+                return ("…" if a else "") + text[a:hit.end() + 60] + "…"
+            df["excerpt"] = df["excerpt"].map(around)
+            view = df[["date_received", "event_type", "death_prob", "excerpt"]].rename(columns={
+                "date_received": "Date", "event_type": "Filed as", "death_prob": "Confidence", "excerpt": "What it says"})
+            sel = st.dataframe(view, hide_index=True, width="stretch", height=520, on_select="rerun",
+                               selection_mode="single-row",
+                               column_config={"Confidence": st.column_config.ProgressColumn(format="%.2f", min_value=0, max_value=1),
+                                              "What it says": st.column_config.TextColumn(width="large")})
+            st.caption("Click a row to see why it was flagged.")
+        with right:
+            chosen = sel.selection.rows[0] if sel and sel.selection.rows else 0
+            evidence_card(dict(df.iloc[chosen]))
+    if not using_sample:
+        with st.expander(f"All {t['deaths_coded']:,} reports filed as deaths"):
+            table(reports(rec["device_key"], "deaths_coded"), ["report_number", "date_received", "excerpt"])
+        with st.expander(f"{t.get('deaths_outcome_field') or 0} reports where the FDA's two death fields disagree"):
+            st.caption("Filed as a malfunction, but the outcome field says Death. Checked by hand, only about 1 in 3 "
+                       "describe a death, so these are not counted above.")
+            table(reports(rec["device_key"], "deaths_outcome_field"), ["report_number", "date_received", "outcomes", "excerpt"])
+
+# ---------------------------------------------------------------- Timeline
+with tab_time:
+    st.markdown('<div class="ptitle">Reports per month, by how they were filed</div>', unsafe_allow_html=True)
+    timeline_chart(360)
+    st.caption("Dots: deaths per month. ▼ a month far above this device's usual level, which came before 49% of 88 "
+               "past recalls, against 36% by chance. Not a prediction.")
+    events = [e for e in rec.get("timeline", []) if e["kind"] in ("recall", "spike")]
+    if events:
+        st.dataframe(pd.DataFrame([{"Date": e["date"], "Event": "Recall" if e["kind"] == "recall" else "Reports jumped",
+                                    "Detail": e["text"]} for e in events]), hide_index=True, width="stretch",
+                     height=min(320, 40 + 35 * len(events)), column_config={"Detail": st.column_config.TextColumn(width="large")})
+
+# ---------------------------------------------------------------- Recalls & filing
+with tab_rec:
+    st.markdown(f'<div class="ptitle">{len(rec["recalls"])} recalls name this model</div>', unsafe_allow_html=True)
+    if rec["recalls"]:
+        cols = st.columns(min(3, len(rec["recalls"])))
+        for i, r in enumerate(rec["recalls"]):
+            lead = next((e.get("lead_months") for e in rec.get("timeline", [])
+                         if e["kind"] == "recall" and e.get("number") == r["number"]), None)
+            status = "red" if "terminated" not in (r["status"] or "").lower() else ""
+            cols[i % len(cols)].markdown(f"""<div class="rc"><div class="top"><span>{esc(r['date'])} · {esc(r['number'])}</span>
+              <span class="pill {status}">{esc(r['status'])}</span></div><div class="r">{esc(r['reason'])}</div>
+              <div class="f">{f"Reports rose {lead} months before" if lead else "No rise in reports before it"}</div></div>""",
+                                         unsafe_allow_html=True)
+    else:
+        st.caption("No recalls matched this model.")
+    st.write("")
+    if not using_sample:
+        mr = pd.DataFrame(maker_reports(d["manufacturer"]))
         peers = pd.DataFrame(makers_late(d["product_code"]))
-        if len(peers) > 1:
-            peers["who"] = peers["manufacturer"].map(lambda x: "This maker" if x == d["manufacturer"] else "Others")
-            peers["name"] = peers["manufacturer"].map(lambda x: " ".join(w for w in x.split() if not w.isdigit()).title()[:28])
-            st.altair_chart(alt.Chart(peers.head(10)).mark_bar().encode(
-                x=alt.X("pct_late:Q", title="% filed late"), y=alt.Y("name:N", sort="-x", title=None),
-                color=alt.Color("who:N", legend=None, scale=alt.Scale(domain=["This maker", "Others"], range=[ACCENT, "#b9bdc7"])),
-                tooltip=["name", "n", "pct_late"]).properties(height=alt.Step(22)).configure_view(stroke=None),
-                width="stretch")
-        with st.expander("The reports filed late, slowest first"):
-            report_table(mr[mr["late_class"] != "on_time"].to_dict("records"),
-                         ["report_number", "date_mfr_aware", "date_received", "days_to_report"])
+        a, b = st.columns(2, gap="large")
+        with a:
+            st.markdown(f'<div class="ptitle">How fast {esc(maker)} reports to the FDA</div>', unsafe_allow_html=True)
+            if not mr.empty:
+                mr["days"] = mr["days_to_report"].clip(upper=180)
+                hist = alt.Chart(mr).mark_bar(color=LIGHT, cornerRadiusTopLeft=2, cornerRadiusTopRight=2).encode(
+                    x=alt.X("days:Q", bin=alt.Bin(step=5), title="Days to report (180+ grouped)"),
+                    y=alt.Y("count():Q", title="Reports"))
+                rule = alt.Chart(pd.DataFrame({"x": [30], "t": ["30-day legal deadline"]}))
+                st.altair_chart(chart_cfg(hist + rule.mark_rule(color=RED, size=2).encode(x="x:Q")
+                                          + rule.mark_text(align="left", dx=6, y=10, color=RED, fontWeight=600).encode(
+                                              x="x:Q", text="t:N"), 260), width="stretch")
+        with b:
+            st.markdown('<div class="ptitle">Share filed late, compared with other makers</div>', unsafe_allow_html=True)
+            if len(peers) > 1:
+                peers["who"] = peers["manufacturer"].map(lambda x: "This maker" if x == d["manufacturer"] else "Others")
+                peers["name"] = peers["manufacturer"].map(lambda x: " ".join(w for w in x.split() if not w.isdigit()).title()[:30])
+                st.altair_chart(chart_cfg(alt.Chart(peers.head(10)).mark_bar(cornerRadiusEnd=3).encode(
+                    x=alt.X("pct_late:Q", title="% of reports filed late"), y=alt.Y("name:N", sort="-x", title=None),
+                    color=alt.Color("who:N", legend=None, scale=alt.Scale(domain=["This maker", "Others"], range=[BLUE, LIGHT])),
+                    tooltip=["name", "n", "pct_late"]), 260), width="stretch")
 
-# ---------------------------------------------------------------- why trust this
-section("why-trust-this", "Why trust these numbers",
-        "We checked our own model against reports read by a person who never saw its answer.")
-if gold.get("methods"):
-    rows = []
-    names = {"death word": "Keyword search", "outcome field": "FDA outcome field", "classifier": "Our model",
-             "large model": "Large AI model, every report"}
-    for k, label in names.items():
-        mm = gold["methods"].get(k)
-        if mm and mm.get("precision") is not None:
-            rows.append({"method": label, "measure": "Right when it flags", "value": mm["precision"]})
-            rows.append({"method": label, "measure": "Deaths it finds", "value": mm["recall"] or 0})
-    df = pd.DataFrame(rows)
-    chart = alt.Chart(df).mark_bar(height=11).encode(
-        y=alt.Y("method:N", sort=list(names.values()), title=None, axis=alt.Axis(labelLimit=190)),
-        yOffset="measure:N",
-        x=alt.X("value:Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format="%", tickCount=5), title=None),
-        color=alt.Color("measure:N", title=None, sort=["Right when it flags", "Deaths it finds"],
-                        scale=alt.Scale(domain=["Right when it flags", "Deaths it finds"], range=[ACCENT, "#b9bdc7"]),
-                        legend=alt.Legend(orient="bottom", direction="vertical", labelFont="Inter", labelFontSize=11)),
-        tooltip=["method", "measure", alt.Tooltip("value:Q", format=".0%")])
-    st.altair_chart(chart.properties(height=alt.Step(13)).configure_view(stroke=None), width="stretch")
-    st.markdown(
-        f'<div class="trust">On <b>{gold["gold_reports_used"]}</b> reports read by a person, our model was right '
-        f'<b>{clf["true_pos"]} times out of {clf["true_pos"] + clf["false_pos"]}</b> when it flagged a death. '
-        f'A keyword search was right <b>{kw.get("true_pos", 0)} times out of {kw.get("true_pos", 0) + kw.get("false_pos", 0)}</b>. '
-        f'Our model misses about {100 - round(100 * (clf.get("recall") or 0))}% of deaths: we chose to show fewer, surer '
-        f'findings. A large AI model reading every report finds more, but costs a paid call per report; ours runs free '
-        f'over all {provenance()["reports"]:,} reports.</div>' if clf and not using_sample else "",
-        unsafe_allow_html=True)
-
-if cal:
-    st.markdown('<div class="kicker" style="margin-top:1.2rem">When the model says it is sure, is it?</div>',
-                unsafe_allow_html=True)
-    cdf = pd.DataFrame([{"band": f"{b['from']:.2f}–{b['to']:.2f}", "rate": b["deaths"] / b["n"] if b["n"] else 0,
-                         "label": f"{b['deaths']} of {b['n']}"} for b in cal])
-    base = alt.Chart(cdf).encode(x=alt.X("band:N", title="Model score", sort=None, axis=alt.Axis(labelAngle=0)),
-                                 y=alt.Y("rate:Q", title=None, scale=alt.Scale(domain=[0, 1.1]),
-                                         axis=alt.Axis(format="%", tickCount=3)))
-    st.altair_chart((base.mark_bar(color=INK, width={"band": 0.6})
-                     + base.mark_text(dy=-8, font="IBM Plex Mono", fontSize=11, color=INK).encode(text="label:N"))
-                    .properties(height=190).configure_view(stroke=None), width="stretch")
-    st.caption("Share of hand-checked reports in each score range that really described a death. Only the top range "
-               "is flagged on this page.")
-
-st.markdown('<div class="kicker" style="margin-top:1.2rem">How a report becomes a finding</div>', unsafe_allow_html=True)
-if not using_sample:
-    p = provenance()
-    steps = [f"{p['reports']:,} FDA reports downloaded (AEDs and CPAP machines, {p['first'][:4]}–{p['last'][:4]})",
-             "Every report not filed as a death is split into passages and read by the model",
-             "A large AI model labelled 2,122 reports; a small model learned from them",
-             f"{explain.get('meta', {}).get('flagged', '?')} reports flagged, each with its reasons",
-             f"{gold.get('gold_reports_used', '?')} reports checked by a person who never saw the model's answer"]
-    st.markdown('<div class="funnel">' + "".join(
-        f'<div style="width:{100 - 9 * i}%">{esc(s)}</div>' for i, s in enumerate(steps)) + "</div>",
-        unsafe_allow_html=True)
-st.markdown(
-    f"- **Source.** Every report and recall is from the FDA's public openFDA API. Nothing is edited; each row links to "
-    f"the FDA's own copy.\n"
-    f"- **Limits.** Device names are typed by each filer, so some reports may sit under another spelling. Recalls are "
-    f"matched by wording. A report is an allegation, not proof.\n"
-    f"- **Reproduce it.** `make pull models` rebuilds every number from the FDA. Full results: [eval/metrics.md]({METRICS}).")
-
-if not using_sample:
-    st.download_button("Download every report behind this page (CSV)",
-                       pd.DataFrame(reports(rec["device_key"], "all")).to_csv(index=False),
-                       file_name=f"rapsheet-{rec['device_key']}.csv", mime="text/csv")
-if key and not using_sample:
-    st.markdown('<div style="margin-top:1rem"><a class="fda" href="?" target="_self">← Look up another device</a></div>',
-                unsafe_allow_html=True)
+# ---------------------------------------------------------------- Why trust this
+with tab_trust:
+    if not using_sample:
+        p = provenance()
+        steps = [(f"{p['reports']:,}", "FDA reports downloaded"),
+                 ("2,122", "labelled by a large AI model"),
+                 ("1 small model", "learns from them, reads every report"),
+                 (f"{explain.get('meta', {}).get('flagged', '–')}", "reports flagged, each with reasons"),
+                 (f"{gold.get('gold_reports_used', '–')}", "checked blind by a person")]
+        st.markdown('<div class="ptitle">How a report becomes a finding</div><div class="flow">' + "".join(
+            f'<div class="step"><div class="v">{esc(v)}</div><div class="l">{esc(l)}</div></div>' for v, l in steps)
+            + "</div>", unsafe_allow_html=True)
+        st.write("")
+    a, b = st.columns(2, gap="large")
+    with a:
+        st.markdown('<div class="ptitle">Four ways to find hidden deaths, scored by a person</div>', unsafe_allow_html=True)
+        if gold.get("methods"):
+            names = {"death word": "Keyword search", "outcome field": "FDA outcome field", "classifier": "Our model",
+                     "large model": "Large AI model"}
+            rows = []
+            for k, label in names.items():
+                mm = gold["methods"].get(k)
+                if mm and mm.get("precision") is not None:
+                    rows += [{"method": label, "measure": "Right when it flags", "value": mm["precision"]},
+                             {"method": label, "measure": "Share of deaths found", "value": mm["recall"] or 0}]
+            st.altair_chart(chart_cfg(alt.Chart(pd.DataFrame(rows)).mark_bar(cornerRadiusEnd=3, height=12).encode(
+                y=alt.Y("method:N", sort=list(names.values()), title=None, axis=alt.Axis(labelLimit=200)),
+                yOffset=alt.YOffset("measure:N", sort=["Right when it flags", "Share of deaths found"]),
+                x=alt.X("value:Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format="%"), title=None),
+                color=alt.Color("measure:N", title=None, sort=["Right when it flags", "Share of deaths found"],
+                                scale=alt.Scale(domain=["Right when it flags", "Share of deaths found"], range=[BLUE, LIGHT]),
+                                legend=alt.Legend(orient="bottom")),
+                tooltip=["method", "measure", alt.Tooltip("value:Q", format=".0%")]), 250), width="stretch")
+            if clf:
+                st.markdown(f'<div class="trust">Our model was right <b>{clf["true_pos"]} of {clf["true_pos"] + clf["false_pos"]}</b> '
+                            f'times it flagged a death; keyword search <b>{kw.get("true_pos", 0)} of '
+                            f'{kw.get("true_pos", 0) + kw.get("false_pos", 0)}</b>. It finds about half the deaths, on purpose: '
+                            f'fewer, surer findings.</div>', unsafe_allow_html=True)
+    with b:
+        st.markdown('<div class="ptitle">When the model is sure, is it right?</div>', unsafe_allow_html=True)
+        if cal:
+            cdf = pd.DataFrame([{"band": f"{c['from']:.2f}–{c['to']:.2f}", "rate": c["deaths"] / c["n"] if c["n"] else 0,
+                                 "label": f"{c['deaths']} of {c['n']}", "flag": i == len(cal) - 1} for i, c in enumerate(cal)])
+            base = alt.Chart(cdf).encode(x=alt.X("band:N", title="Model confidence", sort=None, axis=alt.Axis(labelAngle=0)),
+                                         y=alt.Y("rate:Q", title="Really a death", scale=alt.Scale(domain=[0, 1.12]),
+                                                 axis=alt.Axis(format="%", tickCount=3)))
+            st.altair_chart(chart_cfg(base.mark_bar(width={"band": .55}, cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                color=alt.condition("datum.flag", alt.value(BLUE), alt.value(LIGHT)))
+                + base.mark_text(dy=-9, fontWeight=600, color=INK).encode(text="label:N"), 250), width="stretch")
+            st.caption("Hand-checked reports in each confidence range. Only the blue range is flagged on this site.")
+    st.markdown(f'<div class="note">Source: the FDA\'s public openFDA API; nothing edited. Device names are typed by filers, '
+                f'so some reports may sit under another spelling. Rebuild everything with <code>make pull models</code>. '
+                f'<a href="{METRICS}" target="_blank">Full results and limits ↗</a></div>', unsafe_allow_html=True)
+    if not using_sample:
+        st.download_button("Download every report behind this page (CSV)",
+                           pd.DataFrame(reports(rec["device_key"], "all")).to_csv(index=False),
+                           file_name=f"rapsheet-{rec['device_key']}.csv", mime="text/csv")
