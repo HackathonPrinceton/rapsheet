@@ -183,14 +183,15 @@ if not months.empty:
                       .encode(x="month:O", y=alt.value(0), tooltip=alt.value("Flagged spike")))
     st.altair_chart(alt.layer(*layers), width="stretch")
     st.caption("Bars are reports by the month the FDA received them, coloured by how they were coded. Dashed lines "
-               "are recalls that started in the period shown. Triangles are months the early-warning model flagged.")
+               "are recalls that started in the period shown. Triangles mark months where reports rose far above this device's usual level.")
 
 # ---------------------------------------------------------------- timeline of events
 KIND = {"first_report": "First report", "spike": "Reports rising", "recall": "Recall"}
 events = [e for e in rec.get("timeline", []) if e["kind"] in KIND]
 if events:
     st.subheader("What happened, in order")
-    st.caption("Spikes come from the early-warning model, which flags a month whose reports are far above the "
+    st.caption("'Reports rising' marks a month whose reports were far above the device's usual level. It is not "
+               "a prediction of a recall. "
                "device's usual level. For each recall it says whether reports were flagged as rising beforehand.")
     for e in events:
         st.markdown(f"**{e['date']}** · {KIND[e['kind']]}  \n{e['text']}")
