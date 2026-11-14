@@ -72,6 +72,15 @@ if "i" not in st.session_state or st.session_state.get("who") != checker:
     st.session_state.who = checker
     st.session_state.i = next((k for k, r in enumerate(rows)
                                if answers.get(r["report_number"], {}).get("died") not in ("0", "1", "?")), 0)
+with st.sidebar:
+    st.divider()
+    jump = st.number_input("Go to report #", min_value=1, max_value=len(rows), value=None, step=1,
+                           placeholder="type a number, press Enter")
+    if jump and st.button("Go"):
+        st.session_state.i = int(jump) - 1
+    if st.button("Go to first unanswered"):
+        st.session_state.i = next((k for k, x in enumerate(rows)
+                                   if answers.get(x["report_number"], {}).get("died") not in ("0", "1", "?")), 0)
 i = min(st.session_state.i, len(rows) - 1)
 r = rows[i]
 current = answers.get(r["report_number"], {})
