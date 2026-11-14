@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS reports (
   date_event TEXT, date_mfr_aware TEXT, date_received TEXT,
   narrative TEXT,
   days_to_report INTEGER, late_class TEXT,
-  death_prob REAL, hidden_death INTEGER
+  death_prob REAL, hidden_death INTEGER,
+  mdr_report_key TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_reports_device ON reports(device_key);
 CREATE INDEX IF NOT EXISTS idx_reports_mfr ON reports(manufacturer);
@@ -40,6 +41,9 @@ def connect(path: str = DB_PATH) -> sqlite3.Connection:
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
+    # Added later: the FDA's internal report id. The FDA web page for a report only opens with this id.
+    if "mdr_report_key" not in {r[1] for r in con.execute("PRAGMA table_info(reports)")}:
+        con.execute("ALTER TABLE reports ADD COLUMN mdr_report_key TEXT")
     return con
 
 

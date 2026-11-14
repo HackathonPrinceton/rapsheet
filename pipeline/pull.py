@@ -66,7 +66,8 @@ def to_row(r: dict, code: str) -> tuple:
     iso = lambda d: d.isoformat() if d else None
     return (r.get("report_number") or r.get("mdr_report_key"), code, device_key(maker, brand), brand,
             dev.get("model_number"), maker, r.get("event_type"), source,
-            iso(parse_date(r.get("date_of_event"))), iso(aware), iso(received), narrative, days, cls)
+            iso(parse_date(r.get("date_of_event"))), iso(aware), iso(received), narrative, days, cls,
+            r.get("mdr_report_key"))
 
 
 def months(start: str, end: str):
@@ -90,9 +91,17 @@ def pull_events(con, code: str, start: str, end: str):
             if not results:
                 break
             con.executemany(
-                "INSERT OR REPLACE INTO reports (report_number, product_code, device_key, brand, model,"
+                "INSERT INTO reports (report_number, product_code, device_key, brand, model,"
                 " manufacturer, event_type, source, date_event, date_mfr_aware, date_received, narrative,"
-                " days_to_report, late_class) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                " days_to_report, late_class, mdr_report_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                # Update in place, so a re-pull never wipes the classifier's death_prob / hidden_death.
+                " ON CONFLICT(report_number) DO UPDATE SET product_code=excluded.product_code,"
+                " device_key=excluded.device_key, brand=excluded.brand, model=excluded.model,"
+                " manufacturer=excluded.manufacturer, event_type=excluded.event_type, source=excluded.source,"
+                " date_event=excluded.date_event, date_mfr_aware=excluded.date_mfr_aware,"
+                " date_received=excluded.date_received, narrative=excluded.narrative,"
+                " days_to_report=excluded.days_to_report, late_class=excluded.late_class,"
+                " mdr_report_key=excluded.mdr_report_key",
                 [to_row(r, code) for r in results])
             con.commit()
             total += len(results)
