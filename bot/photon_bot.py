@@ -82,6 +82,8 @@ class Bot:
                 reply = chat.handle(contact, text=content.get("text", ""))
             else:
                 print(f"<- {who[-4:]}: [photo]")
+                # Reading a label takes several seconds, so say so at once instead of going quiet.
+                self.send_new(space_id, agent["id"], replies.READING_PHOTO, key=f"ack-{m['id']}")
                 reply = chat.handle(contact, image=self.photo(content["attachmentId"]))
         except Exception as e:
             print(f"  error: {type(e).__name__}: {e}")

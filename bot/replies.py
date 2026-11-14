@@ -7,6 +7,7 @@ and we never tell anyone to stop using a device.
 DISCLAIMER = "A report is an allegation, not proof the device caused harm."
 HELP = ("This is Rap Sheet: the FDA safety record of a medical device. "
         "Send a photo of a device label or type its name (for example: HeartStart FRx).")
+READING_PHOTO = "Got your photo. Reading the label, this takes a few seconds..."
 PHOTO_FAILED = "I couldn't read a device label in that photo. Please type the brand and model printed on it."
 TRY_AGAIN = "OK. Please type the brand and model printed on the label."
 NO_DEVICE = "First tell me which device. Send a photo of its label or type its name."
@@ -50,14 +51,13 @@ def summary(rec: dict, page_url: str | None = None) -> str:
         parts.append("No recalls found for this model.")
 
     parts.append(f"{t['reports']:,} reports to the FDA{' since ' + since if since else ''}.")
-    if t.get("hidden_death_model_ran"):
-        if t["deaths_hidden"]:
-            parts.append(f"{coded} {t['deaths_hidden']} more mention a "
-                         "patient death but are coded as something else.")
-        else:
-            parts.append(f"{coded} I found no miscoded ones.")
-    else:
-        parts.append(coded)
+    parts.append(coded)
+    # Only the no-model count goes in a text. The text classifier is still provisional (eval/metrics.md),
+    # so its count appears on the page, labelled as such, and not here.
+    extra = t.get("deaths_outcome_field")
+    if extra:
+        parts.append(f"{extra} more {'is' if extra == 1 else 'are'} coded as a malfunction or injury, although "
+                     "the FDA's own patient-outcome field says the patient died.")
 
     if m.get("pct_late") is not None and m.get("reports_with_deadline", 0) >= 20:
         parts.append(f"This maker filed {m['pct_late']:g}% of its reports after the 30-day legal deadline.")

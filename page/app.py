@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from service import record  # noqa: E402
 
 ACCENT, MUTED, INK = "#c0392b", "#9aa5c4", "#2f3e6b"
+METRICS = "https://github.com/HackathonPrinceton/rapsheet/blob/main/eval/metrics.md"
 EVENT_COLORS = {"Death": ACCENT, "Injury": "#e39b4a", "Malfunction": MUTED, "Other": "#c9ced9",
                 "Not given": "#e4e6ec"}
 LINKS = {"fda_url": st.column_config.LinkColumn("FDA page", display_text="open"),
@@ -87,8 +88,10 @@ if not using_sample:
 c1, c2, c3 = st.columns(3)
 c1.metric("Deaths as coded by the FDA", t["deaths_coded"],
           help="Reports where the filer chose the event type 'Death'. Counted directly; no model.")
-c2.metric("Deaths found in miscoded reports", t["deaths_hidden"] if t["hidden_death_model_ran"] else "not run yet",
-          help="Reports coded injury, malfunction or other whose text says the patient died, found by our classifier.")
+outcome = t.get("deaths_outcome_field")
+c2.metric("Coded as malfunction, outcome says death", outcome if outcome is not None else "n/a",
+          help="Reports filed as a malfunction or injury, while the same report's patient-outcome field says "
+               "Death. Both fields are the FDA's own; no model.")
 c3.metric("Maker's reports filed late", f"{m['pct_late']:g}%" if m["pct_late"] is not None else "n/a",
           help="Share of this maker's reports (with both dates known) received more than 30 days after the maker "
                "learned of the event. 30 days is the legal deadline (21 CFR 803.50).")
@@ -102,14 +105,22 @@ else:
         report_table(record.reports(rec["device_key"], "deaths_coded"),
                      ["report_number", "date_received", "event_type", "excerpt"])
 
-    with st.expander(f"Deaths found in miscoded reports: "
-                     f"{t['deaths_hidden'] if t['hidden_death_model_ran'] else 'classifier not run yet'}"):
+    with st.expander(f"Coded as malfunction, outcome says death: the {outcome or 0} reports"):
+        st.caption("Rule: event_type is not 'Death', but the patient outcome field contains 'Death'. Two fields of "
+                   "the same FDA record disagree. Open any row to read it.")
+        report_table(record.reports(rec["device_key"], "deaths_outcome_field"),
+                     ["report_number", "date_received", "event_type", "outcomes", "excerpt"])
+
+    with st.expander("Text classifier (provisional): "
+                     f"{t['deaths_hidden'] if t['hidden_death_model_ran'] else 'not run on this device yet'}"):
+        st.warning("Provisional: this classifier was measured on only a few confirmed death reports, and its "
+                   f"labels are not yet hand-checked. [Measured results and limits]({METRICS})")
         if not t["hidden_death_model_ran"]:
             st.write("The hidden-death classifier has not scored this device yet. When it has, every report it "
                      "flags is listed here with the model's confidence.")
         else:
-            st.caption("Model: a trained classifier reads the report text. Each row shows its confidence; the "
-                       "measured accuracy is under 'How we know'.")
+            st.caption("Model: a sentence-embedding model plus logistic regression reads each report's text and "
+                       "gives the probability that it says the patient died. Each row shows that probability.")
             report_table(record.reports(rec["device_key"], "deaths_hidden"),
                          ["report_number", "date_received", "event_type", "death_prob", "excerpt"])
 
@@ -174,8 +185,18 @@ if not months.empty:
     st.caption("Bars are reports by the month the FDA received them, coloured by how they were coded. Dashed lines "
                "are recalls that started in the period shown. Triangles are months the early-warning model flagged.")
 
+# ---------------------------------------------------------------- timeline of events
+KIND = {"first_report": "First report", "spike": "Reports rising", "recall": "Recall"}
+events = [e for e in rec.get("timeline", []) if e["kind"] in KIND]
+if events:
+    st.subheader("What happened, in order")
+    st.caption("Spikes come from the early-warning model, which flags a month whose reports are far above the "
+               "device's usual level. For each recall it says whether reports were flagged as rising beforehand.")
+    for e in events:
+        st.markdown(f"**{e['date']}** · {KIND[e['kind']]}  \n{e['text']}")
+
 # ---------------------------------------------------------------- hidden-death evidence
-st.subheader("Reports that mention a death but are coded as something else")
+st.subheader("Reports that mention a death but are coded as something else (provisional)")
 if not rec["evidence"]:
     st.write("None found yet." if t["hidden_death_model_ran"] else "The classifier has not been run on this device yet.")
 for e in rec["evidence"]:
@@ -190,9 +211,9 @@ match = rec.get("recall_match")
 if match:
     st.caption(f"How we matched: the FDA lists recalls by device type, not by model, so we read all "
                f"{match['recalls_checked']:,} recall records for code {d['product_code']} and kept those whose "
-               f"description names the maker (\"{match['maker_word']}\") and every model word "
-               f"({', '.join(match['brand_words']) or 'none'}). Generic words like 'defibrillator' are ignored. "
-               f"Check each one below.")
+               f"description names the maker (\"{match['maker_word']}\") and the model's name "
+               f"(\"{match.get('phrase') or 'none'}\"). Generic words like 'defibrillator' are ignored, and one "
+               f"recall is kept per day. Check each one below.")
 if rec["recalls"]:
     for r in rec["recalls"]:
         with st.expander(f"{r['date']} · {r['number']} · {r['status']}"):
@@ -212,8 +233,10 @@ st.markdown(
     "device recalls). Nothing is made up or edited; each row above links to the FDA's own copy.\n"
     "- **Deaths as coded** is a plain count of the FDA's event type. **Late filing** is a date rule: more than "
     "30 days between the maker learning of the event and the FDA receiving the report (21 CFR 803.50).\n"
-    "- **Hidden deaths** come from a trained text classifier. Its precision and recall, measured on reports we "
-    "checked by hand, are reported in the project README.\n"
+    "- **Coded as malfunction, outcome says death** is also a plain count: two fields of the same FDA report "
+    "disagree. No model is involved.\n"
+    "- **The text classifier is provisional.** It reads report text for deaths filed under the wrong category. "
+    f"Its measured precision and recall, and why they are not final yet, are in [eval/metrics.md]({METRICS}).\n"
     "- **Device matching** depends on the brand name each filer typed, which varies, so some reports for this "
     "device may sit under a different spelling.\n"
     "- **A report is an allegation.** It does not prove the device caused harm. Do not stop using a device because "

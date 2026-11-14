@@ -4,6 +4,7 @@ import os
 import re
 from difflib import SequenceMatcher
 
+from pipeline.match import core_phrase, norm, recall_matches
 from pipeline.store import connect
 
 SAMPLE = os.path.join(os.path.dirname(__file__), "..", "data", "sample_record.json")
@@ -51,12 +52,6 @@ def search(q: str, limit: int = 5) -> list[dict]:
     return [dict(d, score=round(s, 2)) for s, _, d in scored[:limit]]
 
 
-# Words that describe the kind of device, not the model. They must not decide which recalls match.
-GENERIC_WORDS = {"defibrillator", "defibrillators", "defib", "aed", "aeds", "automated", "automatic", "external",
-                 "monitor", "system", "device", "unit", "the", "and", "with", "for", "series", "model",
-                 "cpap", "machine", "pump", "kit", "semi", "fully", "ems", "biphasic"}
-
-
 def build(device_key: str) -> dict | None:
     con = connect()
     head = con.execute(
@@ -68,6 +63,10 @@ def build(device_key: str) -> dict | None:
     coded = one("SELECT COUNT(*) FROM reports WHERE device_key=? AND event_type='Death'", device_key)
     hidden = one("SELECT COUNT(*) FROM reports WHERE device_key=? AND hidden_death=1", device_key)
     scored = one("SELECT COUNT(*) FROM reports WHERE device_key=? AND death_prob IS NOT NULL", device_key)
+    # No model: coded as malfunction or injury, while the FDA's own patient-outcome field says Death.
+    outcome_death = one("SELECT COUNT(*) FROM reports WHERE device_key=? AND event_type != 'Death' "
+                        "AND outcomes LIKE '%Death%'", device_key)
+    outcomes_known = one("SELECT COUNT(*) FROM reports WHERE device_key=? AND outcomes IS NOT NULL", device_key)
 
     m = con.execute(
         "SELECT SUM(late_class='on_time') ok, SUM(late_class='late') late, SUM(late_class='very_late') very, "
@@ -77,17 +76,22 @@ def build(device_key: str) -> dict | None:
     known = (m["ok"] or 0) + (m["late"] or 0) + (m["very"] or 0)
     pct = lambda x: round(100 * (x or 0) / known, 1) if known else None
 
-    brand_words = [w for w in re.findall(r"[a-z0-9]+", head["brand"].lower())
-                   if len(w) > 2 and w not in GENERIC_WORDS]
-    maker_first = (head["manufacturer"].split() or [""])[0].lower()
-    recalls = []
+    # One recall rule for the whole project (pipeline/match.py), shared with the timeline and the backtest:
+    # the maker's first word and the brand's core phrase must both appear. One recall per day, as the FDA
+    # files one record per product variant.
+    phrase = core_phrase(head["brand"])
+    maker_first = (norm(head["manufacturer"]).split() or [""])[0]
+    recalls, seen = [], set()
     for r in con.execute("SELECT * FROM recalls WHERE product_code = ? ORDER BY date_initiated DESC",
                          (head["product_code"],)):
-        text = f"{r['description']} {r['firm']}".lower()
-        if maker_first and maker_first in text and brand_words and all(w in text for w in brand_words):
-            recalls.append({"number": r["recall_number"], "date": r["date_initiated"], "status": r["status"],
-                            "reason": (r["reason"] or "")[:300], "firm": r["firm"],
-                            "description": (r["description"] or "")[:300]})
+        if not recall_matches(norm(f"{r['firm']} {r['description']}"), head["manufacturer"], head["brand"]):
+            continue
+        if r["date_initiated"] in seen:
+            continue
+        seen.add(r["date_initiated"])
+        recalls.append({"number": r["recall_number"], "date": r["date_initiated"], "status": r["status"],
+                        "reason": (r["reason"] or "")[:300], "firm": r["firm"],
+                        "description": (r["description"] or "")[:300]})
 
     months = [dict(r) for r in con.execute(
         "SELECT substr(date_received,1,7) month, COUNT(*) n_reports, SUM(event_type='Death') n_deaths_coded, "
@@ -100,7 +104,7 @@ def build(device_key: str) -> dict | None:
 
     evidence = [{
         "report_number": r["report_number"], "coded_as": r["event_type"], "date": r["date_received"],
-        "death_prob": r["death_prob"], "excerpt": excerpt(r["narrative"]),
+        "death_prob": r["death_prob"], "excerpt": r["death_excerpt"] or excerpt(r["narrative"]),
         **links(r),
     } for r in con.execute(
         "SELECT * FROM reports WHERE device_key=? AND hidden_death=1 ORDER BY death_prob DESC LIMIT 25",
@@ -113,14 +117,15 @@ def build(device_key: str) -> dict | None:
                    "product_code": head["product_code"]},
         "period": {"first": head["first"], "last": head["last"]},
         "totals": {"reports": head["n"], "deaths_coded": coded, "deaths_hidden": hidden,
-                   "hidden_death_model_ran": bool(scored)},
+                   "hidden_death_model_ran": bool(scored),
+                   "deaths_outcome_field": outcome_death if outcomes_known else None},
         "manufacturer": {"name": head["manufacturer"], "reports_with_deadline": known,
                          "pct_on_time": pct(m["ok"]), "pct_late": pct((m["late"] or 0) + (m["very"] or 0)),
                          "pct_very_late": pct(m["very"]),
                          "pct_unknown": round(100 * (m["unk"] or 0) / m["n"], 1) if m["n"] else None},
         "recalls": recalls,
         # How recalls were matched, shown on the page so anyone can judge the rule.
-        "recall_match": {"maker_word": maker_first, "brand_words": brand_words,
+        "recall_match": {"maker_word": maker_first, "brand_words": phrase.split(), "phrase": phrase,
                          "recalls_checked": one("SELECT COUNT(*) FROM recalls WHERE product_code=?",
                                                 head["product_code"])},
         # "now" = a flagged spike in one of the three most recent months that have reports
@@ -128,7 +133,19 @@ def build(device_key: str) -> dict | None:
                     "last_spike": last_spike},
         "months": months,
         "evidence": evidence,
+        "timeline": _timeline(con, device_key),
     }
+
+
+def _timeline(con, device_key: str) -> list[dict]:
+    """Krutika's dated story of the device: first report, flagged spikes, recalls (with how many months
+    earlier reports were flagged as rising) and hidden-death reports."""
+    try:
+        from pipeline.timeline import timeline
+        return timeline(con, device_key)
+    except Exception as e:                       # the record must still load if the timeline cannot
+        print(f"timeline unavailable: {type(e).__name__}: {e}")
+        return []
 
 
 def top_reports(device_key: str, n: int = 3) -> list[dict]:
@@ -156,17 +173,19 @@ def excerpt(narrative: str, width: int = 260) -> str:
 
 
 # ---------------------------------------------------------------- audit helpers (used by the page)
-REPORT_COLS = ("report_number, mdr_report_key, date_received, event_type, source, date_mfr_aware, "
-               "days_to_report, late_class, death_prob, hidden_death, brand, model, manufacturer, narrative")
+REPORT_COLS = ("report_number, mdr_report_key, date_received, event_type, outcomes, source, date_mfr_aware, "
+               "days_to_report, late_class, death_prob, hidden_death, death_excerpt, brand, model, manufacturer, "
+               "narrative")
 
 
 def reports(device_key: str, which: str = "all") -> list[dict]:
     """The exact reports behind a number on the page, newest first."""
-    where = {"all": "", "deaths_coded": " AND event_type='Death'", "deaths_hidden": " AND hidden_death=1"}[which]
+    where = {"all": "", "deaths_coded": " AND event_type='Death'", "deaths_hidden": " AND hidden_death=1",
+             "deaths_outcome_field": " AND event_type != 'Death' AND outcomes LIKE '%Death%'"}[which]
     rows = connect().execute(f"SELECT {REPORT_COLS} FROM reports WHERE device_key=?{where} "
                              "ORDER BY date_received DESC", (device_key,)).fetchall()
-    return [dict({k: r[k] for k in r.keys() if k != "narrative"}, excerpt=excerpt(r["narrative"]), **links(r))
-            for r in rows]
+    return [dict({k: r[k] for k in r.keys() if k not in ("narrative", "death_excerpt")},
+                 excerpt=r["death_excerpt"] or excerpt(r["narrative"]), **links(r)) for r in rows]
 
 
 def maker_reports(manufacturer: str) -> list[dict]:
