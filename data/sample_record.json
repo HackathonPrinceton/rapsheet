@@ -1,0 +1,23 @@
+{
+  "_note": "MADE-UP EXAMPLE for development. Not real FDA data.",
+  "device_key": "example--sample-aed-100",
+  "device": {"brand": "SAMPLE AED 100", "manufacturer": "EXAMPLE", "product_code": "MKJ"},
+  "period": {"first": "2019-01-04", "last": "2026-10-28"},
+  "totals": {"reports": 212, "deaths_coded": 3, "deaths_hidden": 9, "hidden_death_model_ran": true},
+  "manufacturer": {"name": "EXAMPLE", "reports_with_deadline": 840, "pct_on_time": 62.0, "pct_late": 31.0, "pct_very_late": 12.0, "pct_unknown": 7.0},
+  "recalls": [{"number": "Z-0000-2025", "date": "2025-06-10", "status": "Open, Classified", "reason": "Example: a circuit board fault may prevent the device from delivering a shock."}],
+  "warning": {"spiking_now": true, "last_spike": "2026-09"},
+  "months": [
+    {"month": "2026-05", "n_reports": 4, "n_deaths_coded": 0, "n_deaths_hidden": 0, "spike": false},
+    {"month": "2026-06", "n_reports": 5, "n_deaths_coded": 0, "n_deaths_hidden": 1, "spike": false},
+    {"month": "2026-07", "n_reports": 3, "n_deaths_coded": 0, "n_deaths_hidden": 0, "spike": false},
+    {"month": "2026-08", "n_reports": 14, "n_deaths_coded": 1, "n_deaths_hidden": 2, "spike": true},
+    {"month": "2026-09", "n_reports": 19, "n_deaths_coded": 0, "n_deaths_hidden": 3, "spike": true},
+    {"month": "2026-10", "n_reports": 11, "n_deaths_coded": 0, "n_deaths_hidden": 1, "spike": false}
+  ],
+  "evidence": [
+    {"report_number": "0000000-2026-00001", "coded_as": "Malfunction", "date": "2026-09-14", "death_prob": 0.97,
+     "excerpt": "Example text: the device reported a low battery and did not deliver a shock. Resuscitation was unsuccessful and the patient expired at the scene.",
+     "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/search.cfm"}
+  ]
+}

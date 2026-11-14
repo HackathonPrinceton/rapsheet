@@ -1,48 +1,43 @@
-# Tally
+# Rap Sheet
 
-**Controlled-substance forensics for independent pharmacies.**
+**The hidden safety record of the medical device you depend on.**
 
-The pharmacist says or texts an opioid count while counting. Tally checks it against deliveries and fills. When pills go missing, it rebuilds a timeline in which every finding cites the record behind it. It also flags prescription rings in the pharmacy's own fill history.
+Text a photo of a medical device label (a CPAP, an insulin pump, an implant card, the AED on the wall). Rap Sheet replies with that device's safety record, built from the FDA's public adverse event reports: recalls, deaths that were filed under the wrong category, how late its manufacturer reports problems, and whether reports are rising. Every number links to the original FDA report.
 
-Built at HackPrinceton Fall 2026.
+Built at HackPrinceton Fall 2026. Track: Healthcare.
 
 ## Why
 
-- Pharmacists share legal responsibility for catching illegitimate controlled-substance prescriptions (21 CFR 1306.04, "corresponding responsibility").
-- CVS, Walgreens and Walmart agreed to about $13.8B in 2022 opioid settlements over ignored red flags.
-- Since 2023, a theft or significant loss must be filed on DEA Form 106 within 45 days.
-- Independent pharmacies still count by hand on paper logs.
+- **Deaths are miscoded.** In a published review of FDA device reports whose text said the patient died, about 23% were filed as "injury", "malfunction" or "other" (Lalani et al., JAMA Internal Medicine, 2021).
+- **Manufacturers report late.** Only 71% of manufacturer reports met the 30-day legal deadline (Everhart et al., BMJ, 2025).
+- **People are not told about recalls.** AEDs, for example, are not registered to their owners.
 
-## What it does
+## How it works
 
-1. **Count by voice or text.** Counts arrive by voice or text message, and Tally replies right away if the number doesn't match the expected count.
-2. **Invoice photo intake.** A photo of the delivery invoice is logged as received stock, which catches short shipments.
-3. **Timeline reconstruction.** When a count is off, it narrows down when the loss happened, using counts, invoices, fills, edits and shifts, each finding cited.
-4. **Prescription ring detection.** A graph of patients, prescribers and addresses that flags DEA red flags.
-5. **Prescriber checks.** Real public data from NPPES and CMS Part D.
-6. **Drafts.** A DEA Form 106 draft and a red-flag decision note.
+| Step | Folder | What it does |
+| --- | --- | --- |
+| Pull | `pipeline/pull.py` | Downloads reports and recalls from openFDA into SQLite |
+| Late reporting | `pipeline/pull.py` | Rule: days between the manufacturer learning of an event and the FDA receiving the report |
+| Hidden deaths | `pipeline/deaths.py` | Trained classifier that reads report narratives |
+| Early warning | `pipeline/warning.py` | Flags unusual jumps in monthly reports, backtested against past recalls |
+| Record | `service/` | API that returns one device's full record |
+| Messaging | `bot/` | Text a device name or photo, get the record back |
+| Page | `page/` | The full record with source links |
 
-Flags are prompts to verify, never automatic refusals.
-
-## Repo layout
-
-| Folder | What lives there |
-| --- | --- |
-| `generator/` | Synthetic pharmacy data with planted diversion scenarios |
-| `engine/` | Count reconciliation, timeline reconstruction, ring graph, prescriber lookups |
-| `bot/` | Messaging agent: counts, invoice photos, alerts, replies |
-| `dashboard/` | Timeline view and ring graph |
-| `data/` | Generated data (large files are not committed) |
-
-## Setup
+## Run it
 
 ```bash
-cp .env.example .env   # then fill in your keys
 pip install -r requirements.txt
+cp .env.example .env                      # add your keys
+python -m pipeline.pull --codes MKJ --start 2024-01    # MKJ = AEDs
+uvicorn service.api:app --port 8000
+streamlit run page/app.py
 ```
 
-## Data and ethics
+Without a database, the API serves `data/sample_record.json`, which is made-up example data for development only.
 
-- Pharmacy records are synthetic. No real patient data is used.
-- Prescriber data comes from public NPPES and CMS datasets.
-- A flag means "review", not "fraud".
+## Data and limits
+
+- All data is public and comes from [openFDA](https://open.fda.gov/apis/device/). It contains no patient identities.
+- A report is an allegation. It does not prove that a device caused harm.
+- Rap Sheet never advises anyone to stop using a device. It points to the recall notice and the manufacturer.

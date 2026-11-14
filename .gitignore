@@ -13,6 +13,7 @@ venv/
 
 # Data (generated or large)
 data/*
+!data/sample_record.json
 !data/.gitkeep
 *.parquet
 *.sqlite

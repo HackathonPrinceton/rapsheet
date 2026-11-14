@@ -1,10 +1,12 @@
 fastapi
 uvicorn
-pandas
-networkx
 requests
 python-dotenv
+pandas
+scikit-learn
+sentence-transformers
 anthropic
 photonhq-api
-deepagents
+python-socketio[asyncio_client]
 streamlit
+altair
