@@ -191,8 +191,7 @@ events = [e for e in rec.get("timeline", []) if e["kind"] in KIND]
 if events:
     st.subheader("What happened, in order")
     st.caption("'Reports rising' marks a month whose reports were far above the device's usual level. It is not "
-               "a prediction of a recall. "
-               "device's usual level. For each recall it says whether reports were flagged as rising beforehand.")
+               "a prediction of a recall. Each recall says whether reports had been rising beforehand.")
     for e in events:
         st.markdown(f"**{e['date']}** · {KIND[e['kind']]}  \n{e['text']}")
 
