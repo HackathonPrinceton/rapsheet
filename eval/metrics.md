@@ -1,12 +1,12 @@
 # Measured results
 
-**Status: provisional (Nov 14).** The classifier figures rest on a small set of labels that have not
-been hand-checked yet. Do not quote them in the pitch. Sections marked "solid" come straight from the
+**Status: provisional (Nov 14, afternoon).** The classifier figures rest on labels that have not been
+hand-checked yet. Quote them only as "against model-assigned labels" until the hand-check is in. Sections marked "solid" come straight from the
 data and will not change.
 
-Data: 420,201 FDA adverse event reports received from January 2019 to November 2026 for two device
-types, AEDs (product code MKJ, 116,479 reports) and CPAP/BiPAP machines (BZD, 303,722 reports), and
-419 recalls. Source: openFDA. Row counts match the totals the API reports.
+Data: 420,167 FDA adverse event reports received from January 2019 to November 2026 for two device
+types, AEDs (product code MKJ) and CPAP/BiPAP machines (BZD), and
+419 recalls. Source: openFDA.
 
 ## 1. Deaths in the FDA's own fields (solid, no model)
 
@@ -18,33 +18,39 @@ types, AEDs (product code MKJ, 116,479 reports) and CPAP/BiPAP machines (BZD, 30
 The second row needs no model: the report's event type and its patient outcome field disagree.
 To reproduce: `SELECT COUNT(*) FROM reports WHERE event_type != 'Death' AND outcomes LIKE '%Death%'`.
 
-## 2. Hidden-death classifier (provisional)
+## 2. Hidden-death classifier (provisional until the hand-check is in)
 
 What it does: gives every report not coded as a death a probability that its text says the patient died.
+A report is flagged when the probability passes a threshold chosen to keep precision at 90% or more.
 
 | | Value |
 |---|---|
 | Reports scored | 414,478 |
-| Flagged as describing a death | 494 (AED 374, CPAP 120) |
-| Of those, with no death-related word in the text | 48 |
-| Of those, where the outcome field also says "Death" | 134 |
-| Outcome field says "Death" but not flagged | 91 |
+| Flagged as describing a death | 276 (AED 248, CPAP 28) |
+| Of those, where the outcome field also says "Death" | 78 |
+| Of those, with no death-related word in the text | 1 |
+| Outcome field says "Death" but not flagged | 147 |
 
-Accuracy on held-out labelled reports (221 reports, of which only 3 describe a death):
+Accuracy on 1,005 held-out labelled reports not coded as deaths, of which 34 describe a death:
 
 | | Precision | Recall |
 |---|---|---|
-| Classifier | 0.40 (2 of 5 flagged) | 0.67 (2 of 3) |
-| Any death-related word | 0.014 | 1.00 |
+| Classifier | 0.913 (21 of 23 flagged) | 0.618 (21 of 34) |
+| Any death-related word | 0.044 | 0.912 |
 
-Why this is not quotable yet:
-- 3 positive examples is far too few to measure precision or recall.
-- All 553 labels were assigned by an AI model reading the text. None are hand-checked.
-- Known false positives remain: reports that say an earlier "Death" entry was a mistake and has been
-  corrected, and one stock recall paragraph on CPAP reports.
+Reading: a keyword search is right about 1 time in 23. The classifier is right about 9 times in 10,
+and finds about 6 in 10 of the deaths. It trades recall for precision on purpose: a wrong "hidden
+death" on a public page is worse than a missed one.
 
-What will make it final: about 2,000 more labels (`make sample label`), a retrain, and a gold set of
-200 reports checked by hand by two people (`eval/gold_blind.csv`).
+What the classifier does not do: find deaths that a keyword search would miss. We tested this directly.
+We took the 287 highest-scoring reports that contain no death-related word and had them labelled: 4
+described a death ("the patient was not resuscitated"). Deaths described without any death-related word
+are rare in these two device types, and the model does not find them reliably.
+
+Labels: 2,675 reports. 2,122 were labelled by a large language model through the API, 553 by an AI
+model in a working session. None are hand-checked yet, so these figures measure agreement with the
+large model, not with a person. The hand-checked figures will come from `eval/gold_blind.csv`
+(200 reports, two checkers) and replace this table: run `python -m pipeline.evaluate`.
 
 Death-related words alone are a poor signal: in AED reports they are mostly about equipment
 ("the battery was dead", "the pads were expired"), and in CPAP reports mostly stock denials
@@ -88,4 +94,5 @@ bulk. Recalls are matched to devices by maker and brand wording, which is imperf
 ```
 make pull      # about 50 minutes
 make models    # train, score, backtest
+python -m pipeline.evaluate   # compare four methods on the hand-checked set
 ```

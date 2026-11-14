@@ -150,9 +150,19 @@ def sample(n_word: int, n_noword: int, n_coded: int, seed: int = 0):
 
 # ---------------------------------------------------------------- train
 
+def gold_numbers() -> set:
+    path = os.path.join(EVAL, "gold_key.csv")
+    if not os.path.exists(path):
+        return set()
+    with open(path, encoding="utf-8") as f:
+        return {r["report_number"] for r in csv.DictReader(f)}
+
+
 def load_labels() -> list[dict]:
     with open(LABELS, encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
+    # Reports in the hand-check set are never used for training or threshold choice.
+    rows = [r for r in rows if r["report_number"] not in gold_numbers()]
     con = connect()
     out = []
     for r in rows:
@@ -292,16 +302,27 @@ def train(test_share: float = 0.4, n_distant: int = 1500, seed: int = 0):
 
 def cached_embeddings(unique: list[str]) -> np.ndarray:
     """Embedding every passage takes about half an hour, and it does not change when the classifier
-    is retrained. Keep the vectors on disk so a retrain can rescore in about a minute."""
+    is retrained. Keep the vectors on disk; only passages not seen before are embedded."""
     emb_path, key_path = os.path.join(HERE, "..", "data", "passage_emb.npy"), os.path.join(HERE, "..", "data", "passage_keys.pkl")
+    old_keys, old = [], None
     if os.path.exists(emb_path) and os.path.exists(key_path):
         with open(key_path, "rb") as f:
-            if pickle.load(f) == unique:
-                return np.load(emb_path, mmap_mode="r")
+            old_keys = pickle.load(f)
+        old = np.load(emb_path, mmap_mode="r")
+        if old_keys == unique:
+            return old
+    where = {k: i for i, k in enumerate(old_keys)}
     out = np.zeros((len(unique), 384), dtype=np.float16)
-    for i in range(0, len(unique), 20000):
-        out[i:i + 20000] = embed(unique[i:i + 20000])
-        print(f"  embedded {min(i + 20000, len(unique))} of {len(unique)} passages", flush=True)
+    known = [(i, where[p]) for i, p in enumerate(unique) if p in where]
+    if known:
+        dst, src = map(np.array, zip(*known))
+        out[dst] = old[src]
+    todo = [i for i, p in enumerate(unique) if p not in where]
+    print(f"  {len(known)} passages reused from disk, {len(todo)} to embed", flush=True)
+    for j in range(0, len(todo), 20000):
+        part = todo[j:j + 20000]
+        out[part] = embed([unique[i] for i in part])
+        print(f"  embedded {min(j + 20000, len(todo))} of {len(todo)} new passages", flush=True)
     np.save(emb_path, out)
     with open(key_path, "wb") as f:
         pickle.dump(unique, f)

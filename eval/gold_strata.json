@@ -1,0 +1,23 @@
+{
+ "population": {
+  "flagged_by_model|MKJ": 374,
+  "flagged_by_model|BZD": 120,
+  "death_word_not_flagged|MKJ": 1779,
+  "death_word_not_flagged|BZD": 4924,
+  "outcome_field_death_not_flagged|MKJ": 61,
+  "outcome_field_death_not_flagged|BZD": 30,
+  "random_other|MKJ": 113090,
+  "random_other|BZD": 294191
+ },
+ "sampled": {
+  "flagged_by_model|BZD": 40,
+  "flagged_by_model|MKJ": 40,
+  "death_word_not_flagged|MKJ": 30,
+  "random_other|MKJ": 15,
+  "outcome_field_death_not_flagged|BZD": 15,
+  "death_word_not_flagged|BZD": 30,
+  "random_other|BZD": 15,
+  "outcome_field_death_not_flagged|MKJ": 15
+ },
+ "note": "Counts when the gold set was drawn (model version 2). Strata overlap slightly: a report can have a death word and a death outcome."
+}

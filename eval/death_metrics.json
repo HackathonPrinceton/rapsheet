@@ -1,24 +1,26 @@
 {
-  "labelled_reports": 553,
-  "training_reports": 8091,
-  "training_passages": 13344,
-  "threshold": 0.9,
+  "labelled_reports": 2675,
+  "training_reports": 9338,
+  "training_passages": 15001,
+  "threshold": 0.989,
   "test_not_coded_as_death": {
-    "n": 221,
-    "positives": 3,
-    "tp": 2,
-    "fp": 3,
-    "fn": 1,
-    "precision": 0.4,
-    "recall": 0.667
+    "n": 1005,
+    "positives": 34,
+    "tp": 21,
+    "fp": 2,
+    "fn": 13,
+    "precision": 0.913,
+    "recall": 0.618
   },
-  "test_average_precision": 0.48,
+  "test_average_precision": 0.842,
   "baseline_any_death_word_on_same_test": {
-    "precision": 0.014,
-    "recall": 1.0
+    "precision": 0.044,
+    "recall": 0.912
   },
   "hand_checked_only": null,
   "label_sources": {
+    "claude_api": 1835,
+    "claude_api_top_noword": 287,
     "claude_session": 553
   }
 }

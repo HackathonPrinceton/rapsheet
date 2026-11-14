@@ -20,7 +20,7 @@ import anthropic
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from .deaths import LABELS, TO_LABEL
+from .deaths import LABELS, TO_LABEL, gold_numbers
 from .store import connect
 
 load_dotenv()
@@ -91,7 +91,7 @@ def main():
     if os.path.exists(LABELS):
         with open(LABELS, encoding="utf-8") as f:
             done = {r["report_number"] for r in csv.DictReader(f)}
-    rows = [r for r in todo_rows(args.top_noword) if r[0] not in done]
+    rows = [r for r in todo_rows(args.top_noword) if r[0] not in done and r[0] not in gold_numbers()]
     if args.limit:
         rows = rows[:args.limit]
     print(f"{len(rows)} reports to label with {MODEL} ({len(done)} already labelled)")
