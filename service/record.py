@@ -39,17 +39,21 @@ def search(q: str, limit: int = 5) -> list[dict]:
     con = connect()
     rows = con.execute(
         "SELECT device_key, brand, manufacturer, COUNT(*) n FROM reports "
-        "WHERE brand != '' GROUP BY device_key HAVING n >= 3").fetchall()
+        "WHERE brand != '' AND device_key NOT LIKE '%--unknown%' AND device_key NOT LIKE 'unknown--%' GROUP BY device_key HAVING n >= 3").fetchall()
     scored = []
     for r in rows:
         hay = f"{r['brand']} {r['manufacturer']}".lower()
-        hits = sum(w in hay for w in words) / len(words)
+        tokens = re.findall(r"[a-z0-9]+", hay)
+        # whole words (or the start of one), so "15" does not match the "15" inside another number
+        hits = sum(any(t.startswith(w) for t in tokens) for w in words) / len(words)
         fuzzy = SequenceMatcher(None, q.lower(), hay).ratio()
         score = hits * 0.7 + fuzzy * 0.3
         if hits > 0 or fuzzy > 0.6:
-            scored.append((score, r["n"], dict(r)))
-    scored.sort(key=lambda t: (round(t[0], 2), t[1]), reverse=True)
-    return [dict(d, score=round(s, 2)) for s, _, d in scored[:limit]]
+            scored.append((score, hits, r["n"], dict(r)))
+    # Among devices that contain every typed word, the one with the most reports comes first: "dreamstation"
+    # should find the DreamStation family with 146,000 reports, not a spelling variant with a few thousand.
+    scored.sort(key=lambda t: (round(t[1], 2), t[2] if t[1] == 1 else 0, round(t[0], 2)), reverse=True)
+    return [dict(d, score=round(s, 2)) for s, _, _, d in scored[:limit]]
 
 
 def build(device_key: str) -> dict | None:

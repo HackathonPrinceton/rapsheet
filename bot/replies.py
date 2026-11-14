@@ -52,12 +52,12 @@ def summary(rec: dict, page_url: str | None = None) -> str:
 
     parts.append(f"{t['reports']:,} reports to the FDA{' since ' + since if since else ''}.")
     parts.append(coded)
-    # Only the no-model count goes in a text. The text classifier is still provisional (eval/metrics.md),
-    # so its count appears on the page, labelled as such, and not here.
-    extra = t.get("deaths_outcome_field")
-    if extra:
-        parts.append(f"{extra} more {'is' if extra == 1 else 'are'} coded as a malfunction or injury, although "
-                     "the FDA's own patient-outcome field says the patient died.")
+    # The text classifier's count goes in the text: on hand-checked reports it was right 15 times in 16
+    # (eval/metrics.md). The outcome-field count does not: only 1 in 3 of those reports describe a death.
+    hidden = t.get("deaths_hidden") if t.get("hidden_death_model_ran") else 0
+    if hidden:
+        parts.append(f"{hidden} more {'report describes' if hidden == 1 else 'reports describe'} a patient death "
+                     "but were filed as a malfunction or injury.")
 
     if m.get("pct_late") is not None and m.get("reports_with_deadline", 0) >= 20:
         parts.append(f"This maker filed {m['pct_late']:g}% of its reports after the 30-day legal deadline.")

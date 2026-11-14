@@ -89,9 +89,9 @@ c1, c2, c3 = st.columns(3)
 c1.metric("Deaths as coded by the FDA", t["deaths_coded"],
           help="Reports where the filer chose the event type 'Death'. Counted directly; no model.")
 outcome = t.get("deaths_outcome_field")
-c2.metric("Coded as malfunction, outcome says death", outcome if outcome is not None else "n/a",
-          help="Reports filed as a malfunction or injury, while the same report's patient-outcome field says "
-               "Death. Both fields are the FDA's own; no model.")
+c2.metric("Deaths filed under another category", t["deaths_hidden"] if t["hidden_death_model_ran"] else "n/a",
+          help="Reports filed as a malfunction or injury whose text says the patient died, found by our text "
+               "classifier. On 101 hand-checked reports it was right 15 times out of 16.")
 c3.metric("Maker's reports filed late", f"{m['pct_late']:g}%" if m["pct_late"] is not None else "n/a",
           help="Share of this maker's reports (with both dates known) received more than 30 days after the maker "
                "learned of the event. 30 days is the legal deadline (21 CFR 803.50).")
@@ -105,16 +105,11 @@ else:
         report_table(record.reports(rec["device_key"], "deaths_coded"),
                      ["report_number", "date_received", "event_type", "excerpt"])
 
-    with st.expander(f"Coded as malfunction, outcome says death: the {outcome or 0} reports"):
-        st.caption("Rule: event_type is not 'Death', but the patient outcome field contains 'Death'. Two fields of "
-                   "the same FDA record disagree. Open any row to read it.")
-        report_table(record.reports(rec["device_key"], "deaths_outcome_field"),
-                     ["report_number", "date_received", "event_type", "outcomes", "excerpt"])
-
-    with st.expander("Text classifier (provisional): "
-                     f"{t['deaths_hidden'] if t['hidden_death_model_ran'] else 'not run on this device yet'}"):
-        st.warning("Provisional: this classifier was measured on only a few confirmed death reports, and its "
-                   f"labels are not yet hand-checked. [Measured results and limits]({METRICS})")
+    with st.expander("Deaths filed under another category: "
+                     f"{t['deaths_hidden'] if t['hidden_death_model_ran'] else 'not scored yet'}"):
+        st.info("On 101 reports checked by hand without seeing the model's answer, the classifier was right 15 "
+                "times out of 16 (precision 0.94) and found 15 of 27 deaths (recall 0.56). A keyword search was "
+                f"right about 1 time in 3. [Measured results and limits]({METRICS})")
         if not t["hidden_death_model_ran"]:
             st.write("The hidden-death classifier has not scored this device yet. When it has, every report it "
                      "flags is listed here with the model's confidence.")
@@ -123,6 +118,13 @@ else:
                        "gives the probability that it says the patient died. Each row shows that probability.")
             report_table(record.reports(rec["device_key"], "deaths_hidden"),
                          ["report_number", "date_received", "event_type", "death_prob", "excerpt"])
+
+    with st.expander(f"The FDA's two death fields disagree: {outcome or 0} reports"):
+        st.caption("Rule: event_type is not 'Death', but the patient outcome field contains 'Death'. Two fields of "
+                   "the same FDA record disagree. This is a data-quality signal, not a death count: on hand-checked "
+                   "reports only about 1 in 3 of these describe the patient dying.")
+        report_table(record.reports(rec["device_key"], "deaths_outcome_field"),
+                     ["report_number", "date_received", "event_type", "outcomes", "excerpt"])
 
     with st.expander(f"Late filing: how {m['pct_late']:g}% was worked out" if m["pct_late"] is not None
                      else "Late filing: not enough data"):
@@ -233,10 +235,11 @@ st.markdown(
     "device recalls). Nothing is made up or edited; each row above links to the FDA's own copy.\n"
     "- **Deaths as coded** is a plain count of the FDA's event type. **Late filing** is a date rule: more than "
     "30 days between the maker learning of the event and the FDA receiving the report (21 CFR 803.50).\n"
-    "- **Coded as malfunction, outcome says death** is also a plain count: two fields of the same FDA report "
-    "disagree. No model is involved.\n"
-    "- **The text classifier is provisional.** It reads report text for deaths filed under the wrong category. "
-    f"Its measured precision and recall, and why they are not final yet, are in [eval/metrics.md]({METRICS}).\n"
+    "- **Deaths filed under another category** come from a text classifier that reads each report. On 101 "
+    "reports checked by hand it was right 15 times in 16 and found a bit over half of the deaths. "
+    f"Full results and limits: [eval/metrics.md]({METRICS}).\n"
+    "- **The FDA's two death fields disagree** is a plain count of reports whose event type and patient-outcome "
+    "field conflict. Most are filing errors, not deaths.\n"
     "- **Device matching** depends on the brand name each filer typed, which varies, so some reports for this "
     "device may sit under a different spelling.\n"
     "- **A report is an allegation.** It does not prove the device caused harm. Do not stop using a device because "
