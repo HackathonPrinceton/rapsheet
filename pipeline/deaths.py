@@ -355,9 +355,47 @@ def score():
     print(json.dumps(summary, indent=2))
 
 
+def gold(seed: int = 7):
+    """Write the hand-check set. Two people label it without seeing the model's answer.
+
+    eval/gold_blind.csv  what the checkers open: the text and an empty "died" column.
+    eval/gold_key.csv    where each report came from and its model score. Open only afterwards.
+    The first 30 rows go to both checkers, to measure how often two people agree.
+    """
+    con = connect()
+    rng = random.Random(seed)
+    with open(LABELS, encoding="utf-8") as f:
+        used = {r["report_number"] for r in csv.DictReader(f)}
+    base = "SELECT report_number, product_code, narrative, death_prob, hidden_death FROM reports WHERE event_type != 'Death' AND "
+    strata = [("flagged_by_model", "hidden_death = 1", 80),
+              ("death_word_not_flagged", "death_word = 1 AND hidden_death = 0", 60),
+              ("outcome_field_death_not_flagged", "outcomes LIKE '%Death%' AND hidden_death = 0", 30),
+              ("random_other", "death_word = 0 AND hidden_death = 0", 30)]
+    picked, seen = [], set(used)
+    for name, where, n in strata:
+        pool = [r for r in con.execute(base + where) if r["report_number"] not in seen]
+        for code in ("MKJ", "BZD"):                      # half from each device type
+            part = [r for r in pool if r["product_code"] == code]
+            for r in rng.sample(part, min(n // 2, len(part))):
+                seen.add(r["report_number"]); picked.append((name, r))
+    rng.shuffle(picked)
+    with open(os.path.join(EVAL, "gold_blind.csv"), "w", newline="", encoding="utf-8") as fb, \
+         open(os.path.join(EVAL, "gold_key.csv"), "w", newline="", encoding="utf-8") as fk:
+        wb, wk = csv.writer(fb), csv.writer(fk)
+        wb.writerow(["row", "checker", "report_number", "died (1 = this patient died, 0 = no, ? = cannot tell)",
+                     "note", "narrative"])
+        wk.writerow(["row", "report_number", "stratum", "death_prob", "hidden_death"])
+        rest = len(picked) - 30
+        for i, (name, r) in enumerate(picked, 1):
+            who = "both" if i <= 30 else ("A" if i <= 30 + rest // 2 else "B")
+            wb.writerow([i, who, r["report_number"], "", "", r["narrative"]])
+            wk.writerow([i, r["report_number"], name, r["death_prob"], r["hidden_death"]])
+    print(f"wrote {len(picked)} reports to eval/gold_blind.csv (key in eval/gold_key.csv)")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["sample", "train", "score"])
+    ap.add_argument("step", choices=["sample", "train", "score", "gold"])
     ap.add_argument("--n-word", type=int, default=1400)
     ap.add_argument("--n-noword", type=int, default=400)
     ap.add_argument("--n-coded", type=int, default=200)
@@ -366,6 +404,8 @@ def main():
         sample(args.n_word, args.n_noword, args.n_coded)
     elif args.step == "train":
         train()
+    elif args.step == "gold":
+        gold()
     else:
         score()
 

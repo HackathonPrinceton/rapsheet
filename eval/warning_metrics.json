@@ -1,0 +1,21 @@
+{
+  "devices_scored": 301,
+  "device_months": 20476,
+  "months_flagged": 974,
+  "recall_events_matched_to_a_device": 402,
+  "recall_events_testable": 88,
+  "recalls_with_warning_in_prior_24_months": 43,
+  "pct_recalls_with_warning": 48.9,
+  "pct_control_windows_with_warning": 35.8,
+  "control_windows": 11383,
+  "median_lead_months": 12.0,
+  "flags_with_24_months_follow_up": 654,
+  "pct_flags_followed_by_no_recall": 79.2,
+  "settings": {
+    "history_months": 12,
+    "z_flag": 3.0,
+    "min_reports": 5,
+    "window_months": 24,
+    "min_device_reports": 30
+  }
+}

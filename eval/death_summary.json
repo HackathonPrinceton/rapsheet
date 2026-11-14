@@ -1,0 +1,8 @@
+{
+  "reports_scored": 414478,
+  "coded_deaths": 5689,
+  "hidden_deaths_flagged": 494,
+  "flagged_without_any_death_word": 48,
+  "flagged_where_outcome_field_says_death": 134,
+  "outcome_field_says_death_but_not_flagged": 91
+}
