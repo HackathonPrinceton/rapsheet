@@ -108,6 +108,16 @@ class Features:
         return hstack([csr_matrix(embed(texts)), self.tfidf.transform(texts)]).tocsr()
 
 
+def load_model() -> dict:
+    """Load the saved classifier. Training runs as `python -m pipeline.deaths`, so the pickle names its
+    feature class as __main__.Features; make that name resolve from any entry point."""
+    import __main__
+    if not hasattr(__main__, "Features"):
+        __main__.Features = Features
+    with open(MODEL, "rb") as f:
+        return pickle.load(f)
+
+
 def ensure_columns(con):
     have = {r[1] for r in con.execute("PRAGMA table_info(reports)")}
     for col, kind in [("death_excerpt", "TEXT"), ("death_word", "INTEGER"), ("outcomes", "TEXT"),
@@ -333,8 +343,7 @@ def score():
     """Score every report not coded as a death. Identical passages are embedded once."""
     con = connect()
     ensure_columns(con)
-    with open(MODEL, "rb") as f:
-        m = pickle.load(f)
+    m = load_model()
     clf, feats, threshold = m["clf"], m["feats"], m["threshold"]
     rows = con.execute("SELECT report_number, narrative FROM reports WHERE event_type != 'Death'").fetchall()
     per_report = [passages(r["narrative"]) for r in rows]
