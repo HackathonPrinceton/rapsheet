@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS reports (
   narrative TEXT,
   days_to_report INTEGER, late_class TEXT,
   death_prob REAL, hidden_death INTEGER,
-  mdr_report_key TEXT
+  mdr_report_key TEXT,
+  outcomes TEXT, patient_problems TEXT, report_type TEXT, udi_di TEXT,
+  death_excerpt TEXT, death_word INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_reports_device ON reports(device_key);
 CREATE INDEX IF NOT EXISTS idx_reports_mfr ON reports(manufacturer);
@@ -41,9 +43,14 @@ def connect(path: str = DB_PATH) -> sqlite3.Connection:
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
-    # Added later: the FDA's internal report id. The FDA web page for a report only opens with this id.
-    if "mdr_report_key" not in {r[1] for r in con.execute("PRAGMA table_info(reports)")}:
-        con.execute("ALTER TABLE reports ADD COLUMN mdr_report_key TEXT")
+    # Columns added after the first version. mdr_report_key is the FDA's internal report id: the FDA
+    # web page for a report only opens with it. The rest are filled by the pull and the classifier.
+    have = {r[1] for r in con.execute("PRAGMA table_info(reports)")}
+    for col, kind in [("mdr_report_key", "TEXT"), ("outcomes", "TEXT"), ("patient_problems", "TEXT"),
+                      ("report_type", "TEXT"), ("udi_di", "TEXT"), ("death_excerpt", "TEXT"),
+                      ("death_word", "INTEGER")]:
+        if col not in have:
+            con.execute(f"ALTER TABLE reports ADD COLUMN {col} {kind}")
     return con
 
 

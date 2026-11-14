@@ -1,12 +1,27 @@
+# Rebuild everything from the public API:  make all
+PY ?= python
+
 pull:
-	python -m pipeline.pull --codes MKJ BZD --start 2019-01
+	$(PY) -m pipeline.pull --codes MKJ BZD --start 2019-01
+sample:
+	$(PY) -m pipeline.deaths sample
+label:
+	$(PY) -m pipeline.label
+deaths:
+	$(PY) -m pipeline.deaths train
+	$(PY) -m pipeline.deaths score
+warning:
+	$(PY) -m pipeline.warning
+models: deaths warning
+all: pull models
 serve:
 	uvicorn service.api:app --port 8000
 page:
 	streamlit run page/app.py
 bot:
-	python -m bot.photon_bot
+	$(PY) -m bot.photon_bot
 demo:
-	python start_demo.py
+	$(PY) start_demo.py
 alerts:
-	python -m bot.alerts --dry-run
+	$(PY) -m bot.alerts --dry-run
+.PHONY: pull sample label deaths warning models all serve page bot demo alerts

@@ -12,3 +12,5 @@ streamlit
 altair
 pillow
 pillow-heif
+pydantic
+scipy

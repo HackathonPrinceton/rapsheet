@@ -64,10 +64,17 @@ def to_row(r: dict, code: str) -> tuple:
     source = r.get("report_source_code") or ""
     days, cls = late_class(aware, received, source)
     iso = lambda d: d.isoformat() if d else None
+    patients = r.get("patient") or []
+    # Outcome codes arrive as full words ("Death") or as stray single letters (" D"); keep the words.
+    outcomes = sorted({o.strip() for p in patients for o in (p.get("sequence_number_outcome") or [])
+                       if len(o.strip()) > 1})
+    problems = sorted({o.strip() for p in patients for o in (p.get("patient_problems") or []) if o.strip()})
     return (r.get("report_number") or r.get("mdr_report_key"), code, device_key(maker, brand), brand,
             dev.get("model_number"), maker, r.get("event_type"), source,
             iso(parse_date(r.get("date_of_event"))), iso(aware), iso(received), narrative, days, cls,
-            r.get("mdr_report_key"))
+            r.get("mdr_report_key"),
+            "; ".join(outcomes), "; ".join(problems), "; ".join(r.get("type_of_report") or []),
+            dev.get("udi_di"))
 
 
 def months(start: str, end: str):
@@ -80,9 +87,19 @@ def months(start: str, end: str):
         y, m = nxt.year, nxt.month
 
 
+def windows(code: str, first, last):
+    """One month normally. A month with more reports than openFDA lets us page through is split by day."""
+    search = (f"device.device_report_product_code:{code} AND "
+              f"date_received:[{first:%Y%m%d} TO {last:%Y%m%d}]")
+    n = get("event", search, 0, 1).get("meta", {}).get("results", {}).get("total", 0)
+    if n <= MAX_SKIP + PAGE:
+        return [(first, last)]
+    return [(first + dt.timedelta(days=i),) * 2 for i in range((last - first).days + 1)]
+
+
 def pull_events(con, code: str, start: str, end: str):
     total = 0
-    for first, last in months(start, end):
+    for first, last in (w for m in months(start, end) for w in windows(code, *m)):
         search = (f"device.device_report_product_code:{code} AND "
                   f"date_received:[{first:%Y%m%d} TO {last:%Y%m%d}]")
         skip = 0
@@ -93,7 +110,8 @@ def pull_events(con, code: str, start: str, end: str):
             con.executemany(
                 "INSERT INTO reports (report_number, product_code, device_key, brand, model,"
                 " manufacturer, event_type, source, date_event, date_mfr_aware, date_received, narrative,"
-                " days_to_report, late_class, mdr_report_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                " days_to_report, late_class, mdr_report_key, outcomes, patient_problems, report_type, udi_di)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                 # Update in place, so a re-pull never wipes the classifier's death_prob / hidden_death.
                 " ON CONFLICT(report_number) DO UPDATE SET product_code=excluded.product_code,"
                 " device_key=excluded.device_key, brand=excluded.brand, model=excluded.model,"
@@ -101,14 +119,18 @@ def pull_events(con, code: str, start: str, end: str):
                 " date_event=excluded.date_event, date_mfr_aware=excluded.date_mfr_aware,"
                 " date_received=excluded.date_received, narrative=excluded.narrative,"
                 " days_to_report=excluded.days_to_report, late_class=excluded.late_class,"
-                " mdr_report_key=excluded.mdr_report_key",
+                " mdr_report_key=excluded.mdr_report_key, outcomes=excluded.outcomes,"
+                " patient_problems=excluded.patient_problems, report_type=excluded.report_type,"
+                " udi_di=excluded.udi_di",
                 [to_row(r, code) for r in results])
             con.commit()
             total += len(results)
             skip += PAGE
             if len(results) < PAGE:
                 break
-        print(f"  {code} {first:%Y-%m}: running total {total}", flush=True)
+        else:
+            print(f"  WARNING {code} {first}: more than {MAX_SKIP + PAGE} reports in one window, some skipped")
+        print(f"  {code} {first:%Y-%m-%d}: running total {total}", flush=True)
     return total
 
 
