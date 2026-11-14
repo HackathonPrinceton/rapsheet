@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pandas
+networkx
+requests
+python-dotenv
+anthropic
+photonhq-api
+deepagents
+streamlit
