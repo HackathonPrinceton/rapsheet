@@ -34,6 +34,8 @@ uvicorn service.api:app --port 8000
 streamlit run page/app.py
 ```
 
+**Demo with one command:** `python start_demo.py` starts the device page, opens a free public Cloudflare tunnel to it (`winget install Cloudflare.cloudflared` first), writes the address to `PAGE_BASE_URL` so the bot's replies link to it, and starts the Photon bot. To test the bot without Photon: `python -m bot.photon_bot --local`.
+
 Without a database, the API serves `data/sample_record.json`, which is made-up example data for development only.
 
 ## Data and limits

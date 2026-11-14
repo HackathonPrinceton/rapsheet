@@ -6,3 +6,7 @@ page:
 	streamlit run page/app.py
 bot:
 	python -m bot.photon_bot
+demo:
+	python start_demo.py
+alerts:
+	python -m bot.alerts --dry-run
