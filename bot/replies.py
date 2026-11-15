@@ -4,7 +4,25 @@ Wording rules (plan section 11): a report is an allegation, so we say "reports m
 and we never tell anyone to stop using a device.
 """
 
+import re
+
 DISCLAIMER = "A report is an allegation, not proof the device caused harm."
+
+# The words that make a sentence say a patient died; used to quote the reason behind a claim.
+_DEATH = re.compile(r"(died|death|deceased|expired|passed away|did not survive|not survive|not resuscitated|"
+                    r"could not be resuscitated|pronounced)", re.I)
+
+
+def death_quote(excerpt: str, limit: int = 110) -> str | None:
+    """The shortest sentence in an excerpt that says the patient died, in plain case: the reason for a claim."""
+    sentences = [x.strip(" .\\\"'") for x in re.split(r"(?<=[.;])\s+|\+", excerpt or "")]
+    hits = sorted((x for x in sentences if _DEATH.search(x) and len(x) > 12), key=len)
+    if not hits:
+        return None
+    q = re.sub(r"\s+", " ", hits[0]).lower()
+    return q if len(q) <= limit else q[:limit].rsplit(" ", 1)[0] + "..."
+
+
 HELP = ("This is Rap Sheet: the FDA safety record of a medical device. "
         "Send a photo of a device label or type its name (for example: HeartStart FRx).")
 READING_PHOTO = "Got your photo. Reading the label, this takes a few seconds..."
@@ -56,8 +74,13 @@ def summary(rec: dict, page_url: str | None = None) -> str:
     # (eval/metrics.md). The outcome-field count does not: only 1 in 3 of those reports describe a death.
     hidden = t.get("deaths_hidden") if t.get("hidden_death_model_ran") else 0
     if hidden:
-        parts.append(f"{hidden} more {'report describes' if hidden == 1 else 'reports describe'} a patient death "
-                     "but were filed as a malfunction or injury.")
+        line = (f"{hidden} more {'report describes' if hidden == 1 else 'reports describe'} a patient death "
+                "but were filed as a malfunction or injury")
+        # The reason, quoted from the strongest report, so the claim can be checked (Arlequin: explainability).
+        ev = next((e for e in rec.get("evidence", []) if death_quote(e.get("excerpt"))), None)
+        if ev:
+            line += f", e.g. report {ev['report_number']}: \"{death_quote(ev['excerpt'])}\""
+        parts.append(line + ".")
 
     if m.get("pct_late") is not None and m.get("reports_with_deadline", 0) >= 20:
         parts.append(f"This maker filed {m['pct_late']:g}% of its reports after the 30-day legal deadline.")
@@ -76,8 +99,10 @@ def more(rec: dict, n: int = 3) -> str:
     ev = rec.get("evidence", [])[:n]
     if not ev:
         return "No report excerpts to show for this device yet."
-    lines = [f"Report {e['report_number']} (coded \"{e['coded_as']}\", {e['date']}): {e['excerpt']}" for e in ev]
-    return "\n\n".join(lines) + "\n\n" + DISCLAIMER
+    head = ("Reports that describe a patient death but were filed as something else (flagged by our "
+            "hand-checked classifier; read each one):")
+    lines = [f"Report {e['report_number']} (filed as \"{e['coded_as']}\", {e['date']}): {e['excerpt']}" for e in ev]
+    return head + "\n\n" + "\n\n".join(lines) + "\n\n" + DISCLAIMER
 
 
 def _name(label: str, rec: dict) -> str:
