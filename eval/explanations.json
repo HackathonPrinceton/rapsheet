@@ -41,26 +41,26 @@
     {
      "from": 0.0,
      "to": 0.5,
-     "n": 60,
+     "n": 100,
      "deaths": 2
     },
     {
      "from": 0.5,
      "to": 0.9,
-     "n": 7,
-     "deaths": 1
+     "n": 17,
+     "deaths": 7
     },
     {
      "from": 0.9,
      "to": 0.989,
-     "n": 18,
-     "deaths": 9
+     "n": 38,
+     "deaths": 26
     },
     {
      "from": 0.989,
      "to": 1.0,
-     "n": 16,
-     "deaths": 15
+     "n": 29,
+     "deaths": 27
     }
    ],
    "large_model_labels": [
@@ -90,7 +90,7 @@
     }
    ]
   },
-  "confirmed_examples": 133
+  "confirmed_examples": 163
  },
  "reports": {
   "3030677-2019-00305": {
@@ -501,9 +501,9 @@
      "similarity": 0.66
     },
     {
-     "report_number": "0003015876-2019-00822",
-     "text": "THE CUSTOMER ADVISED PHYSIO-CONTROL THAT THE PATIENT INVOLVED IN THE REPORTED EVENT IS DECEASED;",
-     "source": "labelled by a large language model",
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
      "similarity": 0.58
     }
    ],
@@ -635,14 +635,14 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "3003521780-2024-00991",
-     "text": "THEY REPORTED THAT THE AED DID NOT ADVISE A SHOCK AND THAT THE PATIENT WAS NOT RESUSCITATED.",
-     "source": "labelled by a large language model",
-     "similarity": 0.8
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.87
     },
     {
-     "report_number": "3003521780-2019-00004",
-     "text": "IT WAS FURTHER REPORTED THAT THE PARAMEDICS WHO ARRIVED, SHOCKED THE PATIENT 11 MORE TIMES WITH THEIR AED, BUT THE PATIENT WAS NOT RESUSCITATED.",
+     "report_number": "3003521780-2024-00991",
+     "text": "THEY REPORTED THAT THE AED DID NOT ADVISE A SHOCK AND THAT THE PATIENT WAS NOT RESUSCITATED.",
      "source": "labelled by a large language model",
      "similarity": 0.8
     }
@@ -915,15 +915,15 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2019-01278",
-     "text": "THE CUSTOMER ADVISED PHYSIO-CONTROL THAT THE PATIENT INVOLVED IN THE EVENT IS DECEASED;",
-     "source": "labelled by a large language model",
-     "similarity": 0.69
-    },
-    {
      "report_number": "0003015876-2019-00652",
      "text": "THE CUSTOMER ADVISED PHYSIO-CONTROL THAT THE PATIENT INVOLVED IN THE EVENT IS DECEASED;",
      "source": "checked by a person",
+     "similarity": 0.69
+    },
+    {
+     "report_number": "0003015876-2019-01278",
+     "text": "THE CUSTOMER ADVISED PHYSIO-CONTROL THAT THE PATIENT INVOLVED IN THE EVENT IS DECEASED;",
+     "source": "labelled by a large language model",
      "similarity": 0.69
     }
    ],
@@ -1055,16 +1055,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.82
+    },
+    {
      "report_number": "3003521780-2024-00991",
      "text": "THEY REPORTED THAT THE AED DID NOT ADVISE A SHOCK AND THAT THE PATIENT WAS NOT RESUSCITATED.",
      "source": "labelled by a large language model",
      "similarity": 0.8
-    },
-    {
-     "report_number": "3003521780-2019-00004",
-     "text": "IT WAS FURTHER REPORTED THAT THE PARAMEDICS WHO ARRIVED, SHOCKED THE PATIENT 11 MORE TIMES WITH THEIR AED, BUT THE PATIENT WAS NOT RESUSCITATED.",
-     "source": "labelled by a large language model",
-     "similarity": 0.74
     }
    ],
    "witnesses": {
@@ -1271,9 +1271,9 @@
      "similarity": 0.65
     },
     {
-     "report_number": "0003015876-2019-01278",
+     "report_number": "0003015876-2019-00652",
      "text": "THE CUSTOMER ADVISED PHYSIO-CONTROL THAT THE PATIENT INVOLVED IN THE EVENT IS DECEASED;",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.63
     }
    ],
@@ -1738,15 +1738,15 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2023-02116",
+     "report_number": "0003015876-2023-01468",
      "text": "THE PATIENT ASSOCIATED WITH THE REPORTED EVENT DID NOT SURVIVE.",
      "source": "labelled by a large language model",
      "similarity": 1.0
     },
     {
-     "report_number": "0003015876-2023-00705",
+     "report_number": "0003015876-2025-01542",
      "text": "THE PATIENT ASSOCIATED WITH THE REPORTED EVENT DID NOT SURVIVE.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 1.0
     }
    ],
@@ -2090,7 +2090,7 @@
     {
      "report_number": "0003015876-2024-00043",
      "text": "THE PATIENT INVOLVED DID NOT SURVIVE HOWEVER THERE HAS BEEN NO INDICATION THE DEVICE CAUSED OR CONTRIBUTED TO THE EVENT.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.71
     },
     {
@@ -2374,9 +2374,9 @@
      "similarity": 0.72
     },
     {
-     "report_number": "0003015876-2026-01926",
-     "text": "Those issues may prevent the device from providing therapy if it were needed.The patient associated with the reported event did not survive.",
-     "source": "labelled by a large language model",
+     "report_number": "2518422-2023-18677",
+     "text": "ADDITIONAL INFORMATION WAS RECEIVED ON (B)(6) 2023: THE PATIENT \"PASSED AWAY DUE TO CANCER\", AND THEY NO LONGER NEED THE REPLACEMENT DEVICE.",
+     "source": "checked by a person",
      "similarity": 0.62
     }
    ],
@@ -2794,9 +2794,9 @@
      "similarity": 0.76
     },
     {
-     "report_number": "0003015876-2019-01278",
+     "report_number": "0003015876-2019-00652",
      "text": "THE CUSTOMER ADVISED PHYSIO-CONTROL THAT THE PATIENT INVOLVED IN THE EVENT IS DECEASED;",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.74
     }
    ],
@@ -2858,16 +2858,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2021-00975",
+     "report_number": "0003015876-2021-00979",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.97
     },
     {
-     "report_number": "0003015876-2025-00859",
-     "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
-     "source": "labelled by a large language model",
-     "similarity": 0.93
+     "report_number": "0003015876-2021-00975",
+     "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
+     "source": "checked by a person",
+     "similarity": 0.97
     }
    ],
    "witnesses": {
@@ -3278,13 +3278,13 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2019-01278",
+     "report_number": "0003015876-2019-00652",
      "text": "THE CUSTOMER ADVISED PHYSIO-CONTROL THAT THE PATIENT INVOLVED IN THE EVENT IS DECEASED;",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.75
     },
     {
-     "report_number": "0003015876-2019-00652",
+     "report_number": "0003015876-2019-00821",
      "text": "THE CUSTOMER ADVISED PHYSIO-CONTROL THAT THE PATIENT INVOLVED IN THE EVENT IS DECEASED;",
      "source": "checked by a person",
      "similarity": 0.75
@@ -3414,16 +3414,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2024-40041",
+     "report_number": "2518422-2024-40562",
      "text": "THE PATIENT HAS PASSED AWAY.",
      "source": "checked by a person",
      "similarity": 0.9
     },
     {
-     "report_number": "0003015876-2025-00886",
-     "text": "THE PATIENT INVOLVED IN THE REPORTED EVENT IS DECEASED.",
+     "report_number": "2518422-2024-40041",
+     "text": "THE PATIENT HAS PASSED AWAY.",
      "source": "checked by a person",
-     "similarity": 0.82
+     "similarity": 0.9
     }
    ],
    "witnesses": {
@@ -4114,16 +4114,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "0003015876-2021-00979",
+     "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
+     "source": "checked by a person",
+     "similarity": 0.84
+    },
+    {
      "report_number": "0003015876-2022-01898",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER CONFIRMED THE DEVICE USE DID NOT CAUSE A NEGATIVE IMPACT TO THE PATIENT OUTCOME.",
      "source": "labelled by a large language model",
      "similarity": 0.81
-    },
-    {
-     "report_number": "0003015876-2025-00859",
-     "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
-     "source": "labelled by a large language model",
-     "similarity": 0.79
     }
    ],
    "witnesses": {
@@ -4192,7 +4192,7 @@
     {
      "report_number": "0003015876-2020-00631",
      "text": "THE PATIENT HAD AN ACTIVE DO NOT RESUSCITATE ORDER IN PLACE AND DID NOT SURVIVE.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.74
     }
    ],
@@ -4886,7 +4886,7 @@
     {
      "report_number": "0003015876-2024-00043",
      "text": "THE PATIENT INVOLVED DID NOT SURVIVE HOWEVER THERE HAS BEEN NO INDICATION THE DEVICE CAUSED OR CONTRIBUTED TO THE EVENT.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.63
     },
     {
@@ -5382,7 +5382,7 @@
     {
      "report_number": "0003015876-2024-00043",
      "text": "THE PATIENT INVOLVED DID NOT SURVIVE HOWEVER THERE HAS BEEN NO INDICATION THE DEVICE CAUSED OR CONTRIBUTED TO THE EVENT.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.63
     }
    ],
@@ -5584,16 +5584,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.6
+    },
+    {
      "report_number": "1218950-2020-05978",
      "text": "A THIRD DEFIBRILLATOR WAS USED TO SUCCESSFULLY SHOCK THE PATIENT, HOWEVER, THE PATIENT DIED.",
      "source": "labelled by a large language model",
      "similarity": 0.6
-    },
-    {
-     "report_number": "3003521780-2024-00839",
-     "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
-     "source": "labelled by a large language model",
-     "similarity": 0.59
     }
    ],
    "witnesses": {
@@ -5794,14 +5794,14 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "1218950-2020-05978",
-     "text": "A THIRD DEFIBRILLATOR WAS USED TO SUCCESSFULLY SHOCK THE PATIENT, HOWEVER, THE PATIENT DIED.",
-     "source": "labelled by a large language model",
-     "similarity": 0.61
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.62
     },
     {
-     "report_number": "0003015876-2023-00179",
-     "text": "THE PATIENT DID DIE, HOWEVER IT WAS THE RESULT OF ACUTE MYOCARDIAL INFARCTION AND NOT THE RESULT OF DEVICE USE.",
+     "report_number": "1218950-2020-05978",
+     "text": "A THIRD DEFIBRILLATOR WAS USED TO SUCCESSFULLY SHOCK THE PATIENT, HOWEVER, THE PATIENT DIED.",
      "source": "labelled by a large language model",
      "similarity": 0.61
     }
@@ -6214,16 +6214,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "2518422-2023-18677",
+     "text": "ADDITIONAL INFORMATION WAS RECEIVED ON (B)(6) 2023: THE PATIENT \"PASSED AWAY DUE TO CANCER\", AND THEY NO LONGER NEED THE REPLACEMENT DEVICE.",
+     "source": "checked by a person",
+     "similarity": 0.61
+    },
+    {
      "report_number": "0003015876-2025-02694",
      "text": "THE PATIENT INVOLVED IN THIS EVENT IS DECEASED, A CLINICAL REVIEW WILL BE DONE TO EVALUATE DEVICE CONTRIBUTION.",
      "source": "labelled by a large language model",
      "similarity": 0.59
-    },
-    {
-     "report_number": "2518422-2022-01088",
-     "text": "THE MANUFACTURER RECEIVED NEW AND RELEVANT INFORMATION ON 03/02/2023 THAT PATIENT WAS DEAD BUT THIS DEATH NOT OCCUR.",
-     "source": "labelled by a large language model",
-     "similarity": 0.58
     }
    ],
    "witnesses": {
@@ -6360,10 +6360,10 @@
      "similarity": 0.94
     },
     {
-     "report_number": "0003015876-2025-00859",
-     "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
-     "source": "labelled by a large language model",
-     "similarity": 0.87
+     "report_number": "0003015876-2021-00979",
+     "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
+     "source": "checked by a person",
+     "similarity": 0.94
     }
    ],
    "witnesses": {
@@ -6850,10 +6850,10 @@
      "similarity": 0.77
     },
     {
-     "report_number": "3003521780-2024-00236",
-     "text": "ALTHOUGH IT WAS REPORTED THAT THERE WAS NO DEATH OR SERIOUS INJURY RELATED TO THIS DEVICE USE, THE PATIENT DID NOT SURVIVE TO THE HOSPITAL DUE TO THE SUICIDE ATTEMPT.",
-     "source": "labelled by a large language model",
-     "similarity": 0.76
+     "report_number": "0003015876-2021-00979",
+     "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
+     "source": "checked by a person",
+     "similarity": 0.77
     }
    ],
    "witnesses": {
@@ -7264,16 +7264,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.63
+    },
+    {
      "report_number": "1218950-2020-05978",
      "text": "A THIRD DEFIBRILLATOR WAS USED TO SUCCESSFULLY SHOCK THE PATIENT, HOWEVER, THE PATIENT DIED.",
      "source": "labelled by a large language model",
      "similarity": 0.61
-    },
-    {
-     "report_number": "3003521780-2024-00839",
-     "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
-     "source": "labelled by a large language model",
-     "similarity": 0.6
     }
    ],
    "witnesses": {
@@ -7544,16 +7544,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.73
+    },
+    {
      "report_number": "3003521780-2019-00016",
      "text": "ALTHOUGH IT WAS REPORTED THAT THE PATIENT IN THE EVENT WAS NOT RESUSCITATED, THE PATIENT'S DEATH DOES NOT APPEAR TO BE RELATED TO THE USE OF THE DEVICE AS THERE WAS NO INDICATION OF A DELAY IN THERAPY ASSOCIATED WITH THE AED USE (TIME FROM AED POWER ON TO RHYT",
      "source": "labelled by a large language model",
      "similarity": 0.68
-    },
-    {
-     "report_number": "3003521780-2019-00004",
-     "text": "IT WAS FURTHER REPORTED THAT THE PARAMEDICS WHO ARRIVED, SHOCKED THE PATIENT 11 MORE TIMES WITH THEIR AED, BUT THE PATIENT WAS NOT RESUSCITATED.",
-     "source": "labelled by a large language model",
-     "similarity": 0.66
     }
    ],
    "witnesses": {
@@ -7614,14 +7614,14 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "3003521780-2024-00839",
-     "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
-     "source": "labelled by a large language model",
-     "similarity": 0.6
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.61
     },
     {
-     "report_number": "0003015876-2025-00859",
-     "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
+     "report_number": "3003521780-2024-00839",
+     "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
      "source": "labelled by a large language model",
      "similarity": 0.6
     }
@@ -8174,16 +8174,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.66
+    },
+    {
      "report_number": "3003521780-2024-00839",
      "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
      "source": "labelled by a large language model",
      "similarity": 0.63
-    },
-    {
-     "report_number": "0003015876-2025-00859",
-     "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
-     "source": "labelled by a large language model",
-     "similarity": 0.62
     }
    ],
    "witnesses": {
@@ -8734,16 +8734,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.74
+    },
+    {
      "report_number": "3003521780-2019-00016",
      "text": "ALTHOUGH IT WAS REPORTED THAT THE PATIENT IN THE EVENT WAS NOT RESUSCITATED, THE PATIENT'S DEATH DOES NOT APPEAR TO BE RELATED TO THE USE OF THE DEVICE AS THERE WAS NO INDICATION OF A DELAY IN THERAPY ASSOCIATED WITH THE AED USE (TIME FROM AED POWER ON TO RHYT",
      "source": "labelled by a large language model",
      "similarity": 0.71
-    },
-    {
-     "report_number": "1218950-2020-05978",
-     "text": "A THIRD DEFIBRILLATOR WAS USED TO SUCCESSFULLY SHOCK THE PATIENT, HOWEVER, THE PATIENT DIED.",
-     "source": "labelled by a large language model",
-     "similarity": 0.7
     }
    ],
    "witnesses": {
@@ -8810,10 +8810,10 @@
      "similarity": 0.7
     },
     {
-     "report_number": "3003521780-2024-00839",
-     "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
-     "source": "labelled by a large language model",
-     "similarity": 0.68
+     "report_number": "3003521780-2024-00293",
+     "text": "IT WAS REPORTED THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.7
     }
    ],
    "witnesses": {
@@ -8944,16 +8944,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.67
+    },
+    {
      "report_number": "0003015876-2022-01440",
      "text": "THE CUSTOMER ALSO INFORMED STRYKER THAT THE PATIENT IS DECEASED;",
      "source": "labelled by a large language model",
      "similarity": 0.67
-    },
-    {
-     "report_number": "3003521780-2019-00007",
-     "text": "IT WAS FURTHER REPORTED THAT THE DEVICE DELIVERED TWO SHOCKS TO THE PATIENT WHO WAS RESUSCITATED, BUT LATER DIED IN THE HOSPITAL.",
-     "source": "checked by a person",
-     "similarity": 0.66
     }
    ],
    "witnesses": {
@@ -9160,10 +9160,10 @@
      "similarity": 0.62
     },
     {
-     "report_number": "0003015876-2021-02226",
-     "text": "THE PATIENT INVOLVED IN THE REPORTED EVENT DID NOT SURVIVE, HOWEVER THE CUSTOMER STATED IT WAS NOT DUE TO THE DEVICE MALFUNCTION.",
-     "source": "labelled by a large language model",
-     "similarity": 0.58
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.6
     }
    ],
    "witnesses": {
@@ -9230,10 +9230,10 @@
      "similarity": 0.66
     },
     {
-     "report_number": "1218950-2020-05978",
-     "text": "A THIRD DEFIBRILLATOR WAS USED TO SUCCESSFULLY SHOCK THE PATIENT, HOWEVER, THE PATIENT DIED.",
-     "source": "labelled by a large language model",
-     "similarity": 0.65
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.66
     }
    ],
    "witnesses": {
@@ -9510,9 +9510,9 @@
      "similarity": 0.62
     },
     {
-     "report_number": "1218950-2020-05978",
-     "text": "A THIRD DEFIBRILLATOR WAS USED TO SUCCESSFULLY SHOCK THE PATIENT, HOWEVER, THE PATIENT DIED.",
-     "source": "labelled by a large language model",
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
      "similarity": 0.61
     }
    ],
@@ -11050,10 +11050,10 @@
      "similarity": 0.63
     },
     {
-     "report_number": "3003521780-2024-00839",
-     "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
-     "source": "labelled by a large language model",
-     "similarity": 0.61
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.62
     }
    ],
    "witnesses": {
@@ -11120,10 +11120,10 @@
      "similarity": 0.63
     },
     {
-     "report_number": "3003521780-2024-00839",
-     "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
-     "source": "labelled by a large language model",
-     "similarity": 0.61
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.62
     }
    ],
    "witnesses": {
@@ -12374,16 +12374,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.64
+    },
+    {
      "report_number": "0003015876-2021-00563",
      "text": "THE PATIENT ASSOCIATED WITH THE REPORTED EVENT DID NOT SURVIVE, HOWEVER THEY DO NOT BELIEVE THAT THE DEVICE USE CONTRIBUTED TO THE PATIENT'S OUTCOME.",
      "source": "labelled by a large language model",
      "similarity": 0.63
-    },
-    {
-     "report_number": "0003015876-2024-00705",
-     "text": "THE PATIENT ASSOCIATED WITH THE REPORTED EVENT DID NOT SURVIVE, HOWEVER THE CUSTOMER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
-     "source": "checked by a person",
-     "similarity": 0.62
     }
    ],
    "witnesses": {
@@ -12450,10 +12450,10 @@
      "similarity": 0.61
     },
     {
-     "report_number": "0003015876-2021-02226",
-     "text": "THE PATIENT INVOLVED IN THE REPORTED EVENT DID NOT SURVIVE, HOWEVER THE CUSTOMER STATED IT WAS NOT DUE TO THE DEVICE MALFUNCTION.",
-     "source": "labelled by a large language model",
-     "similarity": 0.6
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.61
     }
    ],
    "witnesses": {
@@ -12802,7 +12802,7 @@
     {
      "report_number": "0003015876-2024-00043",
      "text": "THE PATIENT INVOLVED DID NOT SURVIVE HOWEVER THERE HAS BEEN NO INDICATION THE DEVICE CAUSED OR CONTRIBUTED TO THE EVENT.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.59
     }
    ],
@@ -12934,16 +12934,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.64
+    },
+    {
      "report_number": "1218950-2020-05978",
      "text": "A THIRD DEFIBRILLATOR WAS USED TO SUCCESSFULLY SHOCK THE PATIENT, HOWEVER, THE PATIENT DIED.",
      "source": "labelled by a large language model",
      "similarity": 0.64
-    },
-    {
-     "report_number": "3003521780-2024-00839",
-     "text": "THE DEFIBRILLATION WAS SUCCESSFUL, AND THE PATIENT SURVIVED TO THE HOSPITAL BUT DIED THREE DAYS LATER.",
-     "source": "labelled by a large language model",
-     "similarity": 0.63
     }
    ],
    "witnesses": {
@@ -13150,8 +13150,8 @@
      "similarity": 0.63
     },
     {
-     "report_number": "3003521780-2019-00007",
-     "text": "IT WAS FURTHER REPORTED THAT THE DEVICE DELIVERED TWO SHOCKS TO THE PATIENT WHO WAS RESUSCITATED, BUT LATER DIED IN THE HOSPITAL.",
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
      "source": "checked by a person",
      "similarity": 0.62
     }
@@ -13214,14 +13214,14 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2025-00859",
-     "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
-     "source": "labelled by a large language model",
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
      "similarity": 0.64
     },
     {
-     "report_number": "0003015876-2026-01926",
-     "text": "Those issues may prevent the device from providing therapy if it were needed.The patient associated with the reported event did not survive.",
+     "report_number": "0003015876-2025-00859",
+     "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
      "source": "labelled by a large language model",
      "similarity": 0.64
     }
@@ -14060,10 +14060,10 @@
      "similarity": 0.74
     },
     {
-     "report_number": "MW5168750",
-     "text": "DURING THE CODE OF THIS PATIENT THE AED PADS ATTACHED TO PATIENT WERE NOTICEABLY WARMER AFTER THE SECOND SHOCK.",
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
      "source": "checked by a person",
-     "similarity": 0.72
+     "similarity": 0.73
     }
    ],
    "witnesses": {
@@ -14266,7 +14266,7 @@
     {
      "report_number": "0003015876-2024-00043",
      "text": "THE PATIENT INVOLVED DID NOT SURVIVE HOWEVER THERE HAS BEEN NO INDICATION THE DEVICE CAUSED OR CONTRIBUTED TO THE EVENT.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.9
     },
     {
@@ -14340,10 +14340,10 @@
      "similarity": 0.61
     },
     {
-     "report_number": "3003521780-2024-00991",
-     "text": "THEY REPORTED THAT THE AED DID NOT ADVISE A SHOCK AND THAT THE PATIENT WAS NOT RESUSCITATED.",
-     "source": "labelled by a large language model",
-     "similarity": 0.59
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.61
     }
    ],
    "witnesses": {
@@ -14404,16 +14404,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.64
+    },
+    {
      "report_number": "0003015876-2025-00859",
      "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
      "source": "labelled by a large language model",
      "similarity": 0.64
-    },
-    {
-     "report_number": "0003015876-2026-01926",
-     "text": "Those issues may prevent the device from providing therapy if it were needed.The patient associated with the reported event did not survive.",
-     "source": "labelled by a large language model",
-     "similarity": 0.63
     }
    ],
    "witnesses": {
@@ -15034,16 +15034,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2021-00975",
+     "report_number": "0003015876-2021-00979",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.87
     },
     {
-     "report_number": "0003015876-2025-00859",
-     "text": "THE PATIENT DID NOT SURVIVE, BUT THE CUSTOMER A HEALTHCARE PROFESSIONAL INDICATED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME AS A BACKUP DEVICE WAS ON THE SCENE AND WAS USED ON THE PATIENT.",
-     "source": "labelled by a large language model",
-     "similarity": 0.85
+     "report_number": "0003015876-2021-00975",
+     "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
+     "source": "checked by a person",
+     "similarity": 0.87
     }
    ],
    "witnesses": {
@@ -15390,7 +15390,7 @@
      "similarity": 0.61
     },
     {
-     "report_number": "0003015876-2021-00975",
+     "report_number": "0003015876-2021-00979",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.6
@@ -15734,14 +15734,14 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "3003521780-2024-00991",
-     "text": "THEY REPORTED THAT THE AED DID NOT ADVISE A SHOCK AND THAT THE PATIENT WAS NOT RESUSCITATED.",
-     "source": "labelled by a large language model",
-     "similarity": 0.76
+     "report_number": "3003521780-2021-00020",
+     "text": "IT WAS REPORTED BY A VOLUNTEER FIRE DEPARTMENT THAT DURING A RESCUE ATTEMPT, THE AED WOULD NOT POWER ON AND THAT THE PATIENT WAS NOT RESUSCITATED.",
+     "source": "checked by a person",
+     "similarity": 0.87
     },
     {
-     "report_number": "3003521780-2019-00004",
-     "text": "IT WAS FURTHER REPORTED THAT THE PARAMEDICS WHO ARRIVED, SHOCKED THE PATIENT 11 MORE TIMES WITH THEIR AED, BUT THE PATIENT WAS NOT RESUSCITATED.",
+     "report_number": "3003521780-2024-00991",
+     "text": "THEY REPORTED THAT THE AED DID NOT ADVISE A SHOCK AND THAT THE PATIENT WAS NOT RESUSCITATED.",
      "source": "labelled by a large language model",
      "similarity": 0.76
     }
@@ -16370,8 +16370,8 @@
      "similarity": 0.7
     },
     {
-     "report_number": "0003015876-2024-00705",
-     "text": "THE PATIENT ASSOCIATED WITH THE REPORTED EVENT DID NOT SURVIVE, HOWEVER THE CUSTOMER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
+     "report_number": "0003015876-2021-00979",
+     "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.7
     }
@@ -16440,8 +16440,8 @@
      "similarity": 0.7
     },
     {
-     "report_number": "0003015876-2024-00705",
-     "text": "THE PATIENT ASSOCIATED WITH THE REPORTED EVENT DID NOT SURVIVE, HOWEVER THE CUSTOMER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
+     "report_number": "0003015876-2021-00979",
+     "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.7
     }
@@ -16930,7 +16930,7 @@
      "similarity": 0.61
     },
     {
-     "report_number": "0003015876-2021-00975",
+     "report_number": "0003015876-2021-00979",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.61
@@ -17142,7 +17142,7 @@
     {
      "report_number": "0003015876-2024-00043",
      "text": "THE PATIENT INVOLVED DID NOT SURVIVE HOWEVER THERE HAS BEEN NO INDICATION THE DEVICE CAUSED OR CONTRIBUTED TO THE EVENT.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.75
     }
    ],
@@ -17212,7 +17212,7 @@
     {
      "report_number": "0003015876-2024-00043",
      "text": "THE PATIENT INVOLVED DID NOT SURVIVE HOWEVER THERE HAS BEEN NO INDICATION THE DEVICE CAUSED OR CONTRIBUTED TO THE EVENT.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.77
     }
    ],
@@ -17490,10 +17490,10 @@
      "similarity": 0.75
     },
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2025-046377",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE/RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.56
+     "similarity": 0.63
     }
    ],
    "witnesses": {
@@ -17840,10 +17840,10 @@
      "similarity": 0.66
     },
     {
-     "report_number": "3030677-2023-02681",
-     "text": "IT WAS INITIALLY REPORTED THE PATIENT HAD DIED.",
+     "report_number": "2518422-2024-09889",
+     "text": "CORRECTED DATA INCLUDES REMOVING DEATH FROM OUTCOMES IN BOX B ADVERSE EVENT/PRODUCT PROBLEM.",
      "source": "checked by a person",
-     "similarity": 0.58
+     "similarity": 0.65
     }
    ],
    "witnesses": {
@@ -17910,10 +17910,10 @@
      "similarity": 0.66
     },
     {
-     "report_number": "3030677-2023-02681",
-     "text": "IT WAS INITIALLY REPORTED THE PATIENT HAD DIED.",
+     "report_number": "2518422-2024-09889",
+     "text": "CORRECTED DATA INCLUDES REMOVING DEATH FROM OUTCOMES IN BOX B ADVERSE EVENT/PRODUCT PROBLEM.",
      "source": "checked by a person",
-     "similarity": 0.58
+     "similarity": 0.65
     }
    ],
    "witnesses": {
@@ -17974,16 +17974,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2023-20143",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.8
+     "similarity": 0.92
     },
     {
-     "report_number": "2518422-2022-14361",
-     "text": "THE MANUFACTURER PREVIOUSLY RECEIVED INFORMATION ALLEGING AN VISUALIZATION OF PARTICLES, LUNG CANCER AND PATIENT WAS DEAD SIX MONTHS AGO ISSUE RELATED TO A BIPAP DEVICE'S SOUND ABATEMENT FOAM.",
-     "source": "labelled by a large language model",
-     "similarity": 0.75
+     "report_number": "2518422-2025-046377",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE/RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.92
     }
    ],
    "witnesses": {
@@ -18120,10 +18120,10 @@
      "similarity": 0.78
     },
     {
-     "report_number": "2518422-2025-112074",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION THAT A DREAMSTATION AUTO CPAP IS BEING RETURNED DUE TO THE USER PASSING AWAY.",
-     "source": "labelled by a large language model",
-     "similarity": 0.64
+     "report_number": "2518422-2025-046377",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE/RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.65
     }
    ],
    "witnesses": {
@@ -18326,7 +18326,7 @@
     {
      "report_number": "2518422-2023-08386",
      "text": "THE PATIENT'S DAUGHTER HAS ALLEGED THAT THE PATIENT DEVELOPED CANCER AND SUBSEQUENTLY PASSED AWAY DUE TO USE OF THE DEVICE.",
-     "source": "labelled by a large language model",
+     "source": "checked by a person",
      "similarity": 0.7
     },
     {
@@ -18394,16 +18394,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2022-14361",
-     "text": "THE MANUFACTURER PREVIOUSLY RECEIVED INFORMATION ALLEGING AN VISUALIZATION OF PARTICLES, LUNG CANCER AND PATIENT WAS DEAD SIX MONTHS AGO ISSUE RELATED TO A BIPAP DEVICE'S SOUND ABATEMENT FOAM.",
-     "source": "labelled by a large language model",
-     "similarity": 0.77
+     "report_number": "2518422-2024-43184",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.91
     },
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2023-20143",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.77
+     "similarity": 0.91
     }
    ],
    "witnesses": {
@@ -18464,16 +18464,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2023-20143",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.79
+     "similarity": 0.92
     },
     {
-     "report_number": "2518422-2022-14361",
-     "text": "THE MANUFACTURER PREVIOUSLY RECEIVED INFORMATION ALLEGING AN VISUALIZATION OF PARTICLES, LUNG CANCER AND PATIENT WAS DEAD SIX MONTHS AGO ISSUE RELATED TO A BIPAP DEVICE'S SOUND ABATEMENT FOAM.",
-     "source": "labelled by a large language model",
-     "similarity": 0.74
+     "report_number": "2518422-2025-046377",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE/RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.92
     }
    ],
    "witnesses": {
@@ -18534,16 +18534,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
+     "report_number": "2518422-2024-09889",
+     "text": "CORRECTED DATA INCLUDES REMOVING DEATH FROM OUTCOMES IN BOX B ADVERSE EVENT/PRODUCT PROBLEM.",
+     "source": "checked by a person",
+     "similarity": 0.86
+    },
+    {
      "report_number": "2518422-2023-35534",
      "text": "THERE WAS A REPORT OF PATIENT DEATH.",
      "source": "labelled by a large language model",
      "similarity": 0.5
-    },
-    {
-     "report_number": "3004123209-2021-00034",
-     "text": "PATIENT INVOLVED - PATIENT DIED ON (B)(6) 2020.",
-     "source": "labelled by a large language model",
-     "similarity": 0.49
     }
    ],
    "witnesses": {
@@ -18604,16 +18604,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2023-20143",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.8
+     "similarity": 0.94
     },
     {
-     "report_number": "2518422-2022-14361",
-     "text": "THE MANUFACTURER PREVIOUSLY RECEIVED INFORMATION ALLEGING AN VISUALIZATION OF PARTICLES, LUNG CANCER AND PATIENT WAS DEAD SIX MONTHS AGO ISSUE RELATED TO A BIPAP DEVICE'S SOUND ABATEMENT FOAM.",
-     "source": "labelled by a large language model",
-     "similarity": 0.7
+     "report_number": "2518422-2025-046377",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE/RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.94
     }
    ],
    "witnesses": {
@@ -18674,16 +18674,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2023-20143",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.73
+     "similarity": 0.83
     },
     {
-     "report_number": "2518422-2022-14361",
-     "text": "THE MANUFACTURER PREVIOUSLY RECEIVED INFORMATION ALLEGING AN VISUALIZATION OF PARTICLES, LUNG CANCER AND PATIENT WAS DEAD SIX MONTHS AGO ISSUE RELATED TO A BIPAP DEVICE'S SOUND ABATEMENT FOAM.",
-     "source": "labelled by a large language model",
-     "similarity": 0.71
+     "report_number": "2518422-2025-046377",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE/RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.83
     }
    ],
    "witnesses": {
@@ -18884,16 +18884,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2023-20143",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.75
+     "similarity": 0.87
     },
     {
-     "report_number": "2518422-2022-14361",
-     "text": "THE MANUFACTURER PREVIOUSLY RECEIVED INFORMATION ALLEGING AN VISUALIZATION OF PARTICLES, LUNG CANCER AND PATIENT WAS DEAD SIX MONTHS AGO ISSUE RELATED TO A BIPAP DEVICE'S SOUND ABATEMENT FOAM.",
-     "source": "labelled by a large language model",
-     "similarity": 0.73
+     "report_number": "2518422-2024-43184",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.87
     }
    ],
    "witnesses": {
@@ -19094,16 +19094,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2023-20143",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.77
+     "similarity": 0.88
     },
     {
-     "report_number": "2518422-2022-14361",
-     "text": "THE MANUFACTURER PREVIOUSLY RECEIVED INFORMATION ALLEGING AN VISUALIZATION OF PARTICLES, LUNG CANCER AND PATIENT WAS DEAD SIX MONTHS AGO ISSUE RELATED TO A BIPAP DEVICE'S SOUND ABATEMENT FOAM.",
-     "source": "labelled by a large language model",
-     "similarity": 0.72
+     "report_number": "2518422-2024-43184",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.88
     }
    ],
    "witnesses": {
@@ -19164,16 +19164,16 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "2518422-2022-67850",
-     "text": "THE MANUFACTURER RECEIVED INFORMATION ALLEGING AN ISSUE RELATED TO A CPAP DEVICE'S SOUND ABATEMENT FOAM.",
+     "report_number": "2518422-2023-20143",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE / RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
      "source": "checked by a person",
-     "similarity": 0.77
+     "similarity": 0.9
     },
     {
-     "report_number": "2518422-2022-14361",
-     "text": "THE MANUFACTURER PREVIOUSLY RECEIVED INFORMATION ALLEGING AN VISUALIZATION OF PARTICLES, LUNG CANCER AND PATIENT WAS DEAD SIX MONTHS AGO ISSUE RELATED TO A BIPAP DEVICE'S SOUND ABATEMENT FOAM.",
-     "source": "labelled by a large language model",
-     "similarity": 0.71
+     "report_number": "2518422-2025-046377",
+     "text": "THE MANUFACTURER WAS CONTACTED IN REFERENCE TO THE VOLUNTARY FIELD SAFETY NOTICE/RECALL NOTIFICATION RELATED TO THE SOUND ABATEMENT FOAM IN CERTAIN CPAP, BIPAP, AND MECHANICAL VENTILATOR DEVICES.",
+     "source": "checked by a person",
+     "similarity": 0.9
     }
    ],
    "witnesses": {
@@ -19380,10 +19380,10 @@
      "similarity": 0.76
     },
     {
-     "report_number": "0003015876-2023-00179",
-     "text": "THE PATIENT DID DIE, HOWEVER IT WAS THE RESULT OF ACUTE MYOCARDIAL INFARCTION AND NOT THE RESULT OF DEVICE USE.",
-     "source": "labelled by a large language model",
-     "similarity": 0.6
+     "report_number": "2518422-2026-009590",
+     "text": "THE MANUFACTURER RECEIVED INFORMATION THAT A DREAMSTATION AUTO BIPAP DEVICE IS RETURNING BECAUSE THE PATIENT HAS PASSED AWAY.",
+     "source": "checked by a person",
+     "similarity": 0.65
     }
    ],
    "witnesses": {

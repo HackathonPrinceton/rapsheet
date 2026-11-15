@@ -1,60 +1,60 @@
 {
-  "gold_reports_used": 101,
-  "say_patient_died": 27,
+  "gold_reports_used": 181,
+  "say_patient_died": 62,
   "dropped": {
-    "cannot_tell": 14,
-    "checkers_disagree": 0
+    "cannot_tell": 18,
+    "checkers_disagree": 1
   },
   "two_checkers": {
-    "reports_both_labelled": 0,
-    "agreed": 0,
-    "kappa": null
+    "reports_both_labelled": 30,
+    "agreed": 27,
+    "kappa": 0.779
   },
   "methods": {
     "death word": {
-      "precision": 0.36,
-      "recall": 1.0,
-      "true_pos": 27,
-      "false_pos": 48,
-      "false_neg": 0,
-      "weighted_precision": 0.091,
-      "weighted_recall": 1.0
+      "precision": 0.44,
+      "recall": 0.952,
+      "true_pos": 59,
+      "false_pos": 75,
+      "false_neg": 3,
+      "weighted_precision": 0.074,
+      "weighted_recall": 0.967
     },
     "outcome field": {
-      "precision": 0.333,
-      "recall": 0.259,
-      "true_pos": 7,
-      "false_pos": 14,
-      "false_neg": 20,
-      "weighted_precision": 0.573,
-      "weighted_recall": 0.131
+      "precision": 0.5,
+      "recall": 0.323,
+      "true_pos": 20,
+      "false_pos": 20,
+      "false_neg": 42,
+      "weighted_precision": 0.692,
+      "weighted_recall": 0.213
     },
     "classifier": {
-      "precision": 0.938,
-      "recall": 0.556,
-      "true_pos": 15,
-      "false_pos": 1,
-      "false_neg": 12,
-      "weighted_precision": 0.978,
-      "weighted_recall": 0.361
+      "precision": 0.931,
+      "recall": 0.435,
+      "true_pos": 27,
+      "false_pos": 2,
+      "false_neg": 35,
+      "weighted_precision": 0.974,
+      "weighted_recall": 0.417
     },
     "classifier or outcome field": {
-      "precision": 0.559,
-      "recall": 0.704,
-      "true_pos": 19,
-      "false_pos": 15,
-      "false_neg": 8,
-      "weighted_precision": 0.798,
-      "weighted_recall": 0.416
+      "precision": 0.661,
+      "recall": 0.661,
+      "true_pos": 41,
+      "false_pos": 21,
+      "false_neg": 21,
+      "weighted_precision": 0.848,
+      "weighted_recall": 0.56
     },
     "large model": {
-      "precision": 0.852,
-      "recall": 0.852,
-      "true_pos": 23,
+      "precision": 0.933,
+      "recall": 0.903,
+      "true_pos": 56,
       "false_pos": 4,
-      "false_neg": 4,
-      "weighted_precision": 0.934,
-      "weighted_recall": 0.499
+      "false_neg": 6,
+      "weighted_precision": 0.965,
+      "weighted_recall": 0.942
     }
   },
   "note": "Weighted figures scale each report by how common its kind is in the full data. With few sampled reports standing for hundreds of thousands, weighted recall is a rough estimate."

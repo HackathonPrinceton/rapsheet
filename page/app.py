@@ -148,6 +148,7 @@ def gold_mistakes():
     import csv
     from pipeline.store import connect
     out = {"false_pos": [], "missed": 0}
+    seen = set()
     con = connect()
     for name in ("gold_A.csv", "gold_B.csv"):
         path = os.path.join(ROOT, "eval", name)
@@ -157,8 +158,9 @@ def gold_mistakes():
             rows = list(csv.DictReader(f))
         col = next(c for c in rows[0] if c.lower().startswith("died"))
         for r in rows:
-            if r[col] not in ("0", "1"):
+            if r[col] not in ("0", "1") or r["report_number"] in seen:
                 continue
+            seen.add(r["report_number"])
             x = con.execute("SELECT hidden_death, death_excerpt, event_type, product_code, mdr_report_key, report_number "
                             "FROM reports WHERE report_number=?", (r["report_number"],)).fetchone()
             if not x or x["event_type"] == "Death":
@@ -421,7 +423,7 @@ with tab_ev:
         with st.expander(f"All {t['deaths_coded']:,} reports filed as deaths"):
             table(reports(rec["device_key"], "deaths_coded"), ["report_number", "date_received", "excerpt"])
         with st.expander(f"{t.get('deaths_outcome_field') or 0} reports where the FDA's two death fields disagree"):
-            st.caption("Filed as a malfunction, but the outcome field says Death. Checked by hand, only about 1 in 3 "
+            st.caption("Filed as a malfunction, but the outcome field says Death. Checked by hand, only about half "
                        "describe a death, so these are not counted above.")
             table(reports(rec["device_key"], "deaths_outcome_field"), ["report_number", "date_received", "outcomes", "excerpt"])
 
@@ -495,9 +497,8 @@ with tab_trust:
         if mk["false_pos"]:
             fp = mk["false_pos"][0]
             st.markdown(f"""<div class="miss"><div class="h">Where the model was wrong, shown openly</div>
-              <div class="q">Of {len(mk["false_pos"]) + (clf.get("true_pos", 0) if clf else 0)} flags a person checked,
-              this one was judged <b>not</b> a patient death. The text says the customer's husband died, but not that he
-              was the patient:<br><i>"{marked((fp["excerpt"] or "")[:260])}…"</i></div>
+              <div class="q">Of {len(mk["false_pos"]) + (clf.get("true_pos", 0) if clf else 0)} flags people checked,
+              {len(mk["false_pos"])} {"was" if len(mk["false_pos"]) == 1 else "were"} judged <b>not</b> a patient death. One of them:<br><i>"{marked((fp["excerpt"] or "")[:260])}…"</i></div>
               <div class="dotlbl">It also missed {mk["missed"]} deaths that a person found. We show fewer, surer findings
               rather than more, less certain ones. <a href="{esc(fp["fda_url"])}" target="_blank">Read this report ↗</a></div></div>""",
                         unsafe_allow_html=True)
@@ -525,7 +526,7 @@ with tab_trust:
             if clf:
                 st.markdown(f'<div class="trust">Our model was right <b>{clf["true_pos"]} of {clf["true_pos"] + clf["false_pos"]}</b> '
                             f'times it flagged a death; keyword search <b>{kw.get("true_pos", 0)} of '
-                            f'{kw.get("true_pos", 0) + kw.get("false_pos", 0)}</b>. It finds about half the deaths, on purpose: '
+                            f'{kw.get("true_pos", 0) + kw.get("false_pos", 0)}</b>. It finds fewer of the deaths, on purpose: '
                             f'fewer, surer findings.</div>', unsafe_allow_html=True)
     with b:
         st.markdown('<div class="ptitle">When the model is sure, is it right?</div>', unsafe_allow_html=True)

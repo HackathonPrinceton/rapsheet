@@ -1,7 +1,7 @@
 # Measured results
 
-**Status (Nov 14, evening):** hand-checked results from one checker (Krutika, 115 reports) are in
-section 2. The second checker's labels and the agreement figure will be added when they arrive. Sections marked "solid" come straight from the
+**Status (Nov 14, night): final.** Hand-checked by two people (Krutika and Mrudula), 230 labels on 200
+reports, each labelled without seeing any model's answer. Sections marked "solid" come straight from the
 data and will not change.
 
 Data: 420,167 FDA adverse event reports received from January 2019 to November 2026 for two device
@@ -16,40 +16,41 @@ types, AEDs (product code MKJ) and CPAP/BiPAP machines (BZD), and
 | Coded "Malfunction" or "Injury" while the patient outcome field says "Death" | 162 | 63 | 225 |
 
 The two fields disagree on 225 reports. **This is a data-quality finding, not a count of hidden
-deaths:** on the hand-checked reports, only 1 in 3 of those where the outcome field says "Death"
-actually describes this patient dying (precision 0.33, section 2). Reproduce with
+deaths:** on the hand-checked reports, only half of those where the outcome field says "Death"
+actually describes this patient dying (precision 0.50, section 2). Reproduce with
 `SELECT COUNT(*) FROM reports WHERE event_type != 'Death' AND outcomes LIKE '%Death%'`.
 
 ## 2. Hidden-death classifier
 
 ### Hand-checked results
 
-101 reports not coded as deaths, read and labelled by a person without seeing any model's answer
-(115 checked, 14 marked "cannot tell" and left out). 27 of them describe the patient dying.
-Every method below is scored on the same 101 reports.
+200 reports not coded as deaths, labelled by two people without seeing any model's answer. 30 were
+labelled by both: they agreed on 27 (Cohen's kappa 0.78). Of the 3 differences, 2 were one person
+answering "cannot tell". Reports marked "cannot tell" (18) or where the two disagreed (1) are left
+out, leaving 181 reports, of which 62 describe the patient dying. Every method is scored on the same
+181 reports.
 
 | Method | Precision | Recall | Right / flagged |
 |---|---|---|---|
-| Keyword search (any death-related word) | 0.36 | 1.00 | 27 / 75 |
-| FDA outcome field says "Death" | 0.33 | 0.26 | 7 / 21 |
-| **Our classifier** | **0.94** | **0.56** | **15 / 16** |
-| Classifier or outcome field | 0.56 | 0.70 | 19 / 34 |
-| Large language model reading every report | 0.85 | 0.85 | 23 / 27 |
+| Keyword search (any death-related word) | 0.44 | 0.95 | 59 / 134 |
+| FDA outcome field says "Death" | 0.50 | 0.32 | 20 / 40 |
+| **Our classifier** | **0.93** | **0.44** | **27 / 29** |
+| Classifier or outcome field | 0.66 | 0.66 | 41 / 62 |
+| Large language model reading every report | 0.93 | 0.90 | 56 / 60 |
 
 Reading:
-- The classifier is wrong once in 16 flags. Keyword search is wrong about 2 times in 3, and the FDA's
-  own outcome field is wrong 2 times in 3.
-- The classifier finds a bit over half of the deaths. It trades recall for precision on purpose: a
-  wrong "hidden death" on a public page is worse than a missed one.
-- A large model reading every report finds more (0.85 recall) but costs an API call per report; the
-  classifier runs free on a laptop over all 414,478 reports.
+- When the classifier flags a death it is right 27 times in 29, as often as a large model reading
+  every report, and twice as often as a keyword search.
+- It finds fewer of the deaths (44%). That is deliberate: the threshold is set for precision, because
+  a wrong "hidden death" on a public page is worse than a missed one. The large model finds 90%, but
+  costs a paid call per report; the classifier runs free on a laptop over all 414,478 reports.
+- The FDA's own outcome field is right only half the time, so it cannot be used on its own.
 
 Weighted to the real mix of reports (the hand-check set over-samples interesting cases), classifier
-precision is 0.98 and keyword precision 0.09. Weighted recall is too uncertain to quote: a handful of
-random reports stand for hundreds of thousands. All figures in `eval/gold_results.json`.
+precision is 0.97 and keyword precision 0.07. Weighted recall is too uncertain to quote. All figures in
+`eval/gold_results.json`; calibration by score range in `eval/explanations.json`.
 
-Limits: 101 reports and one checker. The confidence interval on the classifier's precision is wide
-(15 of 16 is consistent with roughly 70% to 99%).
+Limits: 181 reports from two device types. 27 of 29 is consistent with a precision of roughly 78% to 99%.
 
 ### Earlier figures, against model-assigned labels
 
