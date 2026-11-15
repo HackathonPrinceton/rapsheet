@@ -16,10 +16,11 @@ Built at HackPrinceton Fall 2026 · Healthcare track
 - [Methods](#methods)
 - [Trust and auditability](#trust-and-auditability)
 - [Getting started](#getting-started)
-- [Reproducing the results](#reproducing-the-results)
+- [Reproducing the results](#reproducing-the-results) and tests
 - [Repository layout](#repository-layout)
 - [Limitations and responsible use](#limitations-and-responsible-use)
 - [Team](#team)
+- [License](#license)
 - [Sources](#sources)
 
 ---
@@ -218,7 +219,15 @@ python -m pipeline.evaluate     # score all methods against the hand-checked gol
 python -m pipeline.explain      # write per-flag explanations and calibration
 ```
 
-Inputs and outputs of the evaluation are committed under [`eval/`](eval/): training labels, the blind gold set and both checkers' answers, and the resulting metrics.
+Inputs and outputs of the evaluation are committed under [`eval/`](eval/): training labels, the blind hand-check set with both checkers' answers, and the resulting metrics. [`eval/README.md`](eval/README.md) explains every file.
+
+### Tests
+
+```bash
+make test        # or: python -m pytest -q tests
+```
+
+13 tests cover the late-filing rule, name cleaning, recall matching, the keyword baseline's known failures, the agreement measure, the reports-rising detector, and an end-to-end path from search to bot reply to the rendered page.
 
 ---
 
@@ -249,7 +258,8 @@ rapsheet/
 ├── page/
 │   ├── app.py            device page
 │   └── gold_check.py     blind hand-labelling tool for the gold set
-├── eval/               labels, gold set, metrics
+├── eval/               results, the blind hand-check and training labels (see eval/README.md)
+├── tests/              unit and end-to-end tests
 ├── data/               local database (not committed) and a sample record
 └── start_demo.py       one command for a full demo
 ```
@@ -273,6 +283,12 @@ rapsheet/
 |---|---|
 | Mrudula ([@mrudulaeluri29](https://github.com/mrudulaeluri29)) | Messaging bot, label matcher, alerts, device record service, device page and audit views |
 | Krutika Anaganti ([@kanagant](https://github.com/kanagant)) | Data pipeline, hidden-death classifier, evaluation and explanations, reports-rising backtest, page explainability views |
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).
 
 ---
 
