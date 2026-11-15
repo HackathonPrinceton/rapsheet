@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Rap Sheet logo">
+  <rect width="512" height="512" rx="112" fill="#2f3e6b"/>
+  <!-- the record sheet -->
+  <rect x="136" y="84" width="240" height="344" rx="22" fill="#ffffff"/>
+  <!-- clip at the top, like a file on a clipboard -->
+  <rect x="206" y="62" width="100" height="48" rx="14" fill="#c0392b"/>
+  <!-- lines of the record -->
+  <rect x="172" y="150" width="168" height="16" rx="8" fill="#2f3e6b"/>
+  <rect x="172" y="186" width="112" height="16" rx="8" fill="#9aa5c4"/>
+  <rect x="172" y="340" width="168" height="16" rx="8" fill="#9aa5c4"/>
+  <rect x="172" y="376" width="88" height="16" rx="8" fill="#9aa5c4"/>
+  <!-- the pulse: the device's history -->
+  <polyline points="160,272 212,272 232,232 256,312 280,244 296,272 352,272"
+            fill="none" stroke="#c0392b" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
