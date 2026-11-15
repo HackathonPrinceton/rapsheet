@@ -1389,16 +1389,19 @@ with tab_trust:
                 cdf = pd.DataFrame([{"band": f"{c['from']:.2f}-{c['to']:.2f}", "rate": c["deaths"] / c["n"] if c["n"] else 0,
                                      "label": f"{c['deaths']} of {c['n']}", "flag": i == len(cal) - 1,
                                      "use": "Used on this site" if i == len(cal) - 1 else "Not shown"} for i, c in enumerate(cal)])
-                base = alt.Chart(cdf).encode(x=alt.X("band:N", title=None, sort=None, axis=alt.Axis(labelAngle=0, domain=False, ticks=False)),
+                cdf["tick"] = cdf["band"] + "|" + cdf["use"]
+                base = alt.Chart(cdf).encode(x=alt.X("tick:N", title=None, sort=None, axis=alt.Axis(
+                    labelAngle=0, domain=False, ticks=False, labelExpr="split(datum.value, '|')", labelLineHeight=17,
+                    labelPadding=8, labelLimit=140,
+                    labelColor=alt.condition("indexof(datum.value, 'Used') >= 0", alt.value("#1d4ed8"), alt.value("#4b5563")),
+                    labelFontWeight=alt.condition("indexof(datum.value, 'Used') >= 0", alt.value(600), alt.value(400)))),
                                              y=alt.Y("rate:Q", title=None, scale=alt.Scale(domain=[0, 1.12]), axis=None))
                 st.altair_chart((base.mark_bar(width={"band": .6}).encode(
                     color=alt.condition("datum.flag", alt.value("#1d4ed8"), alt.value("#cdd2dc")))
                     + base.mark_text(dy=-9, font="IBM Plex Mono", fontSize=12).encode(
                         text="label:N", color=alt.condition("datum.flag", alt.value("#1d4ed8"), alt.value("#1f2937")))
-                    + base.mark_text(fontSize=11, fontWeight=600).encode(
-                        y=alt.value(238), text="use:N", color=alt.condition("datum.flag", alt.value("#1d4ed8"), alt.value("#6b7280")))
-                    ).properties(height=250, padding={"bottom": 4}).configure_view(stroke=None)
-                    .configure_axis(labelFont="IBM Plex Mono", labelColor="#4b5563"), width="stretch")
+                    ).properties(height=240).configure_view(stroke=None)
+                    .configure_axis(labelFont="IBM Plex Mono", labelFontSize=11.5), width="stretch")
                 st.caption("Model confidence. Bar height = share that really described a death, hand-checked.")
     a, b = st.columns([1.25, 1], gap="medium")
     with a:
