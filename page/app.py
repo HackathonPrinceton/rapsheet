@@ -76,6 +76,17 @@ a.btn {{ display: inline-block; margin-top: .7rem; font-size: .85rem; font-weigh
 .stTabs [data-baseweb="tab-list"] {{ gap: .3rem; border-bottom: 1px solid {LINE}; }}
 .stTabs [data-baseweb="tab"] {{ height: 2.6rem; padding: 0 1.1rem; font-weight: 600; }}
 .note {{ font-size: .78rem; color: {GREY}; }}
+.src {{ display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 600; margin-top: .55rem;
+       padding: .18rem .55rem; border-radius: 999px; }}
+.src.fda {{ background: #ecfdf5; color: #047857; }} .src.model {{ background: #eff6ff; color: #1d4ed8; }}
+.dots {{ display: flex; flex-wrap: wrap; gap: 3px; margin-top: .45rem; max-width: 17rem; }}
+.dots span {{ width: .62rem; height: .62rem; border-radius: 50%; background: {BLUE}; }}
+.dots span.x {{ background: #fca5a5; }}
+.dotlbl {{ font-size: .74rem; color: {GREY}; margin-top: .25rem; }}
+.miss {{ background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: .9rem 1.1rem; }}
+.miss .h {{ font-weight: 700; color: #9a3412; font-size: .9rem; }}
+.miss mark {{ background: #fed7aa; color: #9a3412; font-weight: 700; padding: 0 .1rem; border-radius: 3px; }}
+.miss .q {{ font-size: .85rem; color: #1f2937; margin: .45rem 0; line-height: 1.5; }}
 @media (max-width: 900px) {{ .kpis, .flow {{ grid-template-columns: repeat(2, 1fr); }} .wit {{ grid-template-columns: 1fr; }}
   .block-container {{ padding: .8rem 1rem; }} }}
 </style>""", unsafe_allow_html=True)
@@ -129,6 +140,40 @@ def load_json(name):
         return {}
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+
+@st.cache_data(show_spinner=False)
+def gold_mistakes():
+    """Reports where the model and the person disagreed, so the page can show them openly."""
+    import csv
+    from pipeline.store import connect
+    out = {"false_pos": [], "missed": 0}
+    con = connect()
+    for name in ("gold_A.csv", "gold_B.csv"):
+        path = os.path.join(ROOT, "eval", name)
+        if not os.path.exists(path):
+            continue
+        with open(path, encoding="utf-8-sig") as f:
+            rows = list(csv.DictReader(f))
+        col = next(c for c in rows[0] if c.lower().startswith("died"))
+        for r in rows:
+            if r[col] not in ("0", "1"):
+                continue
+            x = con.execute("SELECT hidden_death, death_excerpt, event_type, product_code, mdr_report_key, report_number "
+                            "FROM reports WHERE report_number=?", (r["report_number"],)).fetchone()
+            if not x or x["event_type"] == "Death":
+                continue
+            if x["hidden_death"] == 1 and r[col] == "0":
+                out["false_pos"].append({"report_number": x["report_number"], "excerpt": x["death_excerpt"],
+                                         "product_code": x["product_code"], **record.links(x)})
+            elif r[col] == "1" and not x["hidden_death"]:
+                out["missed"] += 1
+    return out
+
+
+def dots(right: int, total: int) -> str:
+    return ('<div class="dots">' + "".join('<span></span>' if i < right else '<span class="x"></span>'
+                                            for i in range(total)) + '</div>')
 
 
 def esc(x) -> str:
@@ -212,16 +257,21 @@ tab_over, tab_ev, tab_time, tab_rec, tab_trust = st.tabs(
 # ---------------------------------------------------------------- shared pieces
 def kpis():
     late = f"{m['pct_late']:g}%" if m.get("pct_late") is not None else "–"
-    acc = f"Hand-checked: right {clf['true_pos']} of {clf['true_pos'] + clf['false_pos']}" if clf else "Found in report text"
+    fda = '<span class="src fda">✓ FDA record · no model</span>'
+    if clf:
+        right, total = clf["true_pos"], clf["true_pos"] + clf["false_pos"]
+        proof = (f'{dots(right, total)}<div class="dotlbl">{right} of {total} confirmed by a person who never saw '
+                 f'the model\'s answer</div>')
+    else:
+        proof = ""
     st.markdown(f"""<div class="kpis">
-      <div class="kpi"><div class="v">{t['deaths_coded']:,}</div><div class="l">Deaths filed as deaths</div>
-        <div class="s">From the FDA's event type</div></div>
+      <div class="kpi"><div class="v">{t['deaths_coded']:,}</div><div class="l">Deaths filed as deaths</div>{fda}</div>
       <div class="kpi red"><div class="v">{hidden_n if hidden_n is not None else '–'}</div>
-        <div class="l">Deaths filed as malfunction or injury</div><div class="s">{esc(acc)}</div></div>
-      <div class="kpi"><div class="v">{late}</div><div class="l">Maker's reports filed late</div>
-        <div class="s">After the 30-day legal deadline</div></div>
-      <div class="kpi"><div class="v">{len(rec['recalls'])}</div><div class="l">Recalls for this model</div>
-        <div class="s">{len(open_recalls)} still open</div></div></div>""", unsafe_allow_html=True)
+        <div class="l">Deaths filed as malfunction or injury</div>
+        <span class="src model">◎ Our model · checked by hand</span>{proof}</div>
+      <div class="kpi"><div class="v">{late}</div><div class="l">Maker's reports filed after the 30-day deadline</div>{fda}</div>
+      <div class="kpi"><div class="v">{len(rec['recalls'])}</div><div class="l">Recalls for this model ({len(open_recalls)} open)</div>{fda}</div>
+    </div>""", unsafe_allow_html=True)
 
 
 def timeline_chart(height=280, labels=True):
@@ -292,8 +342,9 @@ def evidence_card(e: dict, compact=False):
                  f'<div class="w {"yes" if od else ""}">Outcome field<b>{"Death" if od else "Not death"}</b></div>'
                  f'<div class="w yes">Report text<b>Patient died</b></div>')
     prob = e.get("death_prob") or x.get("prob")
-    trust = (f'Confidence {min(prob, 0.999):.1%} · reports scored this high were confirmed by a person '
-             f'<b>{top_band["deaths"]} of {top_band["n"]}</b> times' if prob is not None and top_band else "")
+    trust = (f'<b>Confidence {min(prob, 0.999):.1%}.</b> Reports scored this high, checked by a person:'
+             f'{dots(top_band["deaths"], top_band["n"])}<div class="dotlbl">{top_band["deaths"]} of {top_band["n"]} '
+             f'really described a death</div>' if prob is not None and top_band else "")
     why = ""
     if not compact:
         up, down = x.get("words_up", [])[:4], x.get("words_down", [])[:2]
@@ -318,6 +369,9 @@ def evidence_card(e: dict, compact=False):
 # ---------------------------------------------------------------- Overview
 with tab_over:
     kpis()
+    st.markdown('<div class="note" style="margin:-.4rem 0 .8rem">Every number on this page opens the FDA reports behind it. '
+                'Green = counted straight from the FDA record. Blue = found by our model and checked by a person.</div>',
+                unsafe_allow_html=True)
     left, right = st.columns([2.1, 1], gap="large")
     with left:
         st.markdown('<div class="ptitle">Reports per month · recalls in blue · ▼ unusual jump</div>', unsafe_allow_html=True)
@@ -437,6 +491,17 @@ with tab_trust:
             f'<div class="step"><div class="v">{esc(v)}</div><div class="l">{esc(l)}</div></div>' for v, l in steps)
             + "</div>", unsafe_allow_html=True)
         st.write("")
+        mk = gold_mistakes()
+        if mk["false_pos"]:
+            fp = mk["false_pos"][0]
+            st.markdown(f"""<div class="miss"><div class="h">Where the model was wrong, shown openly</div>
+              <div class="q">Of {len(mk["false_pos"]) + (clf.get("true_pos", 0) if clf else 0)} flags a person checked,
+              this one was judged <b>not</b> a patient death. The text says the customer's husband died, but not that he
+              was the patient:<br><i>"{marked((fp["excerpt"] or "")[:260])}…"</i></div>
+              <div class="dotlbl">It also missed {mk["missed"]} deaths that a person found. We show fewer, surer findings
+              rather than more, less certain ones. <a href="{esc(fp["fda_url"])}" target="_blank">Read this report ↗</a></div></div>""",
+                        unsafe_allow_html=True)
+            st.write("")
     a, b = st.columns(2, gap="large")
     with a:
         st.markdown('<div class="ptitle">Four ways to find hidden deaths, scored by a person</div>', unsafe_allow_html=True)
