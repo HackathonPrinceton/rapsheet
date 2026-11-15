@@ -390,6 +390,71 @@ a.b2 {{ border: 1px solid #d1d5db; color: {NAVY} !important; }}
   .card {{ padding: 1.1rem 1rem; }} .card .num {{ font-size: 2.4rem; }}
   .facts {{ grid-template-columns: repeat(2, 1fr); gap: 1.1rem 1.4rem; }}
   .st-key-paper .stTabs [data-baseweb="tab-list"] {{ gap: 1.2rem; overflow-x: auto; }} }}
+.st-key-evpick {{ display: none; }}
+@media (max-width: 640px) {{
+  /* top of the page */
+  .brand {{ font-size: 1.3rem; gap: .6rem; }} .brand img {{ height: 2.3rem; border-radius: 9px; }}
+  .st-key-search input {{ height: 2.5rem; font-size: 1rem !important; }}
+  .st-key-paper, .st-key-home {{ padding: 1.6rem 1rem .9rem; margin-top: 1rem; border-radius: 12px; }}
+  .rec-eyebrow {{ font-size: .8rem; letter-spacing: .03em; text-transform: none; flex-direction: column; gap: .15rem;
+                 font-family: 'IBM Plex Sans', sans-serif; }}
+  .rec-title {{ font-size: 1.9rem; margin: .4rem 0 1rem; }}
+  .fact .k {{ font-size: .8rem; text-transform: none; letter-spacing: 0; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; }}
+  .fact .v {{ font-size: 1.15rem; }}
+  .rec-note {{ margin: .9rem 0 1.4rem; }}
+  /* four numbers: the main finding first, the rest as compact rows */
+  .cards {{ grid-template-columns: 1fr; gap: .8rem; margin-top: 1.1rem; }}
+  .card {{ display: grid; grid-template-columns: 5.4rem 1fr; column-gap: .9rem; padding: 1.1rem 1rem; }}
+  .card > * {{ grid-column: 2; }}
+  .card .num {{ grid-column: 1; grid-row: 1 / span 6; margin: 0; font-size: 2.1rem; align-self: start; }}
+  .card .lab {{ text-transform: none; letter-spacing: 0; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600;
+               font-size: .95rem; color: {NAVY}; margin-bottom: .3rem; }}
+  .card .desc {{ font-weight: 400; }}
+  .card .foot {{ padding-top: .7rem; }} .card .foot a {{ border-top: none; padding-top: 0; }}
+  .card.main {{ order: -1; grid-template-columns: auto 1fr; }}
+  .card.main .lab {{ grid-column: 1 / -1; color: #1d4ed8; margin-bottom: .2rem; }}
+  .card.main .num {{ grid-column: 1; grid-row: auto; font-size: 3rem; align-self: center; }}
+  .card.main .desc {{ grid-column: 2; align-self: center; font-weight: 600; font-size: 1.05rem; }}
+  .card.main .tag, .card.main .dots, .card.main .proof, .card.main .foot {{ grid-column: 1 / -1; }}
+  .legend {{ font-size: .88rem; gap: .2rem .8rem; margin-bottom: 1.2rem; }}
+  /* charts and cards */
+  .viz-h {{ font-size: 1.2rem; }} .c-title {{ font-size: 1.3rem; }}
+  .unit-leg {{ flex-direction: column; gap: .3rem; }}
+  .strip-lab {{ margin-left: 0; }} .strip-lab small {{ display: block; }}
+  /* three witnesses as rows: label left, value right */
+  .w3 {{ grid-template-columns: 1fr; gap: .45rem; }}
+  .w3 .b {{ display: flex; justify-content: space-between; align-items: center; min-height: 0; padding: .7rem .85rem; font-size: .9rem; }}
+  .w3 .b strong {{ margin: 0; font-size: 1rem; }}
+  .w3cap {{ display: none; }}
+  /* big tap targets */
+  a.fda, .why-actions a.b1, .why-actions a.b2 {{ display: block; width: 100%; text-align: center; padding: .85rem 1rem;
+      border-radius: 8px; text-decoration: none; }}
+  a.fda {{ background: {NAVY}; color: #fff !important; }}
+  .why-actions {{ flex-direction: column; gap: .55rem; }}
+  .teaser, .ev-top {{ flex-direction: column; align-items: flex-start; }}
+  /* Evidence: a picker instead of the table */
+  .st-key-evpick {{ display: block; }}
+  .st-key-evlist [data-testid="stDataFrame"], .st-key-evlist .lst-h {{ display: none; }}
+  .st-key-evlist {{ border: none; padding: 0; background: transparent; }}
+  .ev-h {{ font-size: 1.35rem; margin-top: 1rem; }} .ev-sub {{ font-size: .95rem; margin-bottom: .8rem; }}
+  .st-key-whycard {{ padding: 1.1rem .9rem 1rem; }}
+  .why-score .v {{ font-size: 1.7rem; }}
+  .wbars {{ grid-template-columns: 6.2rem 1fr 3rem; font-size: .88rem; }}
+  .sim .top {{ flex-direction: column; align-items: flex-start; gap: .35rem; }}
+  /* other tabs */
+  .tl-row {{ grid-template-columns: 2.2rem 1fr; gap: .2rem .8rem; margin-bottom: 1.2rem; }}
+  .tl-what {{ grid-column: 2; }} .tl-leg {{ display: none; }}
+  .rgrid {{ grid-template-columns: 1fr; gap: 1rem; }}
+  .rcard .rtop {{ flex-direction: column; align-items: flex-start; }} .rcard .st {{ margin-left: 0; margin-right: .4rem; }}
+  .late-top {{ flex-direction: column; }}
+  .peers .pr {{ grid-template-columns: 6.5rem 1fr 3rem; font-size: .88rem; }}
+  .hero {{ padding: 1.4rem 1.2rem; gap: 1.2rem; }} .hero .h {{ font-size: 1.3rem; }}
+  .flow2 {{ grid-template-columns: 1fr; gap: .8rem 0; }} .flow2 .fs {{ border-left: none; padding: 0 .4rem; display: flex; gap: .8rem; align-items: baseline; }}
+  .flow2 .v {{ min-width: 5.5rem; }}
+  .src2 {{ grid-template-columns: 1fr; gap: .1rem; }} .src2 span {{ margin-top: .6rem; }}
+  .pcard, .st-key-chartcard, .st-key-chartcard2, .st-key-evcard, .st-key-latecard, .st-key-calcard, .st-key-srccard,
+  .st-key-unitcard, .st-key-yearcard, .st-key-peercard {{ padding: 1.1rem .9rem 1rem; }}
+}}
 </style>""", unsafe_allow_html=True)
 
 
@@ -1093,6 +1158,11 @@ with tab_ev:
                         for r, x in zip(df["report_number"], df.get("excerpt", [""] * n))]
         left, right = st.columns([1, 1.12], gap="medium")
         with left:
+            with st.container(key="evpick"):          # shown on phones only (CSS); the table is shown on wider screens
+                picked = st.selectbox("Choose a report", range(n), key="evpickbox",
+                                      format_func=lambda i: f"{df.iloc[i]['date_received']} · {df.iloc[i]['phrase'] or 'report'} · "
+                                                            f"{(df.iloc[i]['death_prob'] or 0):.2f}")
+                st.caption(f"Report {picked + 1} of {n}, newest first")
             with st.container(key="evlist"):
                 st.markdown(f'<div class="lst-h"><span class="m">{n} reports &middot; newest first</span>'
                             f'<span>1 selected</span></div>', unsafe_allow_html=True)
@@ -1105,7 +1175,7 @@ with tab_ev:
                 st.download_button(f"Download all {n} as CSV", df.drop(columns=["phrase"]).to_csv(index=False),
                                    file_name=f"rapsheet-{rec['device_key']}-filed-as-something-else.csv", mime="text/csv")
         with right:
-            chosen = sel.selection.rows[0] if sel and sel.selection.rows else 0
+            chosen = sel.selection.rows[0] if sel and sel.selection.rows else picked
             with st.container(key="whycard"):
                 why_card(dict(df.iloc[chosen]))
     if not using_sample:
