@@ -35,7 +35,7 @@ All figures are measured on public openFDA data: 420,167 adverse event reports f
 | Agreement between the two human checkers | 27 of 30 shared reports, Cohen's kappa **0.78** |
 | Keyword search for death words, precision | 0.44 |
 | FDA patient-outcome field says "Death", precision | 0.50 |
-| Manufacturer reports filed within the 30-day legal deadline | 54.4% across all years in our data |
+| Manufacturer reports filed within the 30-day legal deadline | 68.9% for 2019 to 2022; 54.4% across all years (includes follow-up reports, which overstates lateness) |
 | Recalls preceded by a "reports rising" flag in the prior 24 months | 48.9%, against 35.8% for random windows |
 
 The classifier trades recall for precision deliberately: a wrong "hidden death" on a public page does more harm than a missed one. When it flags a report, it is right as often as a large language model reading every report, at no per-report cost.
@@ -141,8 +141,8 @@ A month is flagged when a device's report count is far above its own previous 12
 
 Every number on the page can be checked by the person reading it.
 
-- **Every figure opens its source rows.** Each headline number expands to the exact reports it was counted from, each linked to the FDA's report page and to the raw openFDA record. The full set can be downloaded as CSV.
-- **Every flag is explained.** For each hidden-death flag, [`pipeline/explain.py`](pipeline/explain.py) records the passage the model scored highest, the words that pushed the score up or down (exact contributions, since the model is linear), and the most similar reports confirmed by a person.
+- **Every figure has its source rows.** The Evidence tab lists the exact reports behind each headline number, each linked to the FDA's report page and to the raw openFDA record. The full set can be downloaded as CSV.
+- **Every flag is explained.** For each hidden-death flag, [`pipeline/explain.py`](pipeline/explain.py) records the passage the model scored highest, the words that pushed the score up or down (exact contributions, since the model is linear), and the most similar confirmed reports, marked as confirmed by a person or by a large language model.
 - **Three witnesses.** For each report, the FDA's event type, its patient-outcome field and the narrative text are shown side by side, with disagreements highlighted.
 - **Confidence means something.** Scores are calibrated against hand-checked reports, so "high confidence" reads as "right N times out of M".
 - **Text messages carry their reasons.** A hidden-death claim quotes one report's sentence and report number, so it can be verified from the phone.
@@ -177,6 +177,8 @@ cp .env.example .env
 | `PHOTON_API_KEY` | Photon project key (`pho_sk_...`) |
 | `PHOTON_PROJECT_ID` | Photon project id (`pho_prj_...`) |
 | `ANTHROPIC_API_KEY` | Vision model access for reading label photos |
+| `RAPSHEET_VISION_MODEL` | Name of the vision model that reads label photos |
+| `LABEL_MODEL` | Name of the model used to label training data (needed only to relabel) |
 | `PAGE_BASE_URL` | Public address of the device page; set automatically by `start_demo.py` |
 
 ### Build the data
@@ -184,7 +186,7 @@ cp .env.example .env
 ```bash
 python -m pipeline.pull --codes MKJ --start 2019-01      # AEDs; add BZD for CPAP machines
 python -m pipeline.warning                               # reports-rising flags
-python -m pipeline.import_scores death_scores_mkj.csv    # load classifier scores computed elsewhere
+make scores                                              # load classifier scores computed elsewhere (AED and CPAP files)
 ```
 
 ### Run

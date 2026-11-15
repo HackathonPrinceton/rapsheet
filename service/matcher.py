@@ -12,7 +12,7 @@ import os
 
 from . import record
 
-MODEL = os.environ.get("RAPSHEET_VISION_MODEL", "claude-opus-5-5")
+MODEL = os.environ.get("RAPSHEET_VISION_MODEL", "")     # set RAPSHEET_VISION_MODEL in .env (never committed)
 
 LABEL_PROMPT = (
     "This is a photo of a medical device or its label. Read only what is printed. "
@@ -51,6 +51,8 @@ def _to_jpeg(image: bytes) -> bytes:
 def read_label(image: bytes) -> dict:
     """Photo bytes -> {"readable", "brand", "model", "manufacturer"}."""
     import anthropic
+    if not MODEL:
+        raise RuntimeError("Set RAPSHEET_VISION_MODEL in .env to the vision model that reads label photos.")
     client = anthropic.Anthropic()
     response = client.beta.messages.create(
         model=MODEL,
