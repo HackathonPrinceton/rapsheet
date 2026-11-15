@@ -8,13 +8,14 @@ Rap Sheet turns the FDA's public adverse event and recall data into a plain-lang
 
 **Why the name.** A rap sheet is the record a person carries of every time they were reported or charged. Medical devices have one too: the FDA's file of every problem ever reported about them. As with a person's record, an entry is an allegation, not a verdict, which is why every number here links to the report behind it.
 
-Built at HackPrinceton Fall 2026 · Healthcare track
+Built at HackPrinceton Fall 2026 · Healthcare track · Special tracks: Arlequin AI (AI-Driven Forensics), Photon, ChatOverflow
 
 ---
 
 ## Contents
 
 - [Key results](#key-results)
+- [Who it is for](#who-it-is-for)
 - [The problem](#the-problem)
 - [How it works](#how-it-works)
 - [Methods](#methods)
@@ -40,10 +41,19 @@ All figures are measured on public openFDA data: 420,167 adverse event reports f
 | Agreement between the two human checkers | 27 of 30 shared reports, Cohen's kappa **0.78** |
 | Keyword search for death words, precision | 0.44 |
 | FDA patient-outcome field says "Death", precision | 0.50 |
+| LIFEPAK CR2 defibrillator: reports that describe a patient death but were not filed as deaths | **29 of 77** (more than 1 in 3); 8 of them in 2025 alone |
 | Manufacturer reports filed within the 30-day legal deadline | 68.9% for 2019 to 2022; 54.4% across all years (includes follow-up reports, which overstates lateness) |
 | Recalls preceded by a "reports rising" flag in the prior 24 months | 48.9%, against 35.8% for random windows |
 
 The classifier trades recall for precision deliberately: a wrong "hidden death" on a public page does more harm than a missed one. When it flags a report, it is right as often as a large language model reading every report, at no per-report cost.
+
+---
+
+## Who it is for
+
+**People who own or rely on a device.** The gym manager with an AED on the wall, or someone with a CPAP machine at home. They text a photo and learn in seconds whether the device has an open recall, what to ask the manufacturer, and they can ask to be alerted if that changes. Nobody tells them today: public-access AEDs are not registered to their owners.
+
+**People who investigate.** Journalists, regulators and hospital buyers. They open the same record and see what the official death count misses, a timeline of reports and recalls, how the device compares with every other model of its type, and the evidence behind each flag. The Rap Sheet Investigator answers their questions with a case file in which every claim cites an FDA report.
 
 ---
 
@@ -172,11 +182,14 @@ python -m agent.investigator "Which AEDs have the most deaths filed as malfuncti
 
 Every number on the page can be checked by the person reading it.
 
+- **Better than a keyword search.** On the same hand-checked reports, searching for death words gives 134 hits and 75 are wrong ("the battery was dead", "the pads expired"). The classifier flags 29 and is wrong on 2.
 - **Every figure has its source rows.** The Evidence tab lists the exact reports behind each headline number, each linked to the FDA's report page and to the raw openFDA record. The full set can be downloaded as CSV.
 - **Every flag is explained.** For each hidden-death flag, [`pipeline/explain.py`](pipeline/explain.py) records the passage the model scored highest, the words that pushed the score up or down (exact contributions, since the model is linear), and the most similar confirmed reports, marked as confirmed by a person or by a large language model.
 - **Three witnesses.** For each report, the FDA's event type, its patient-outcome field and the narrative text are shown side by side, with disagreements highlighted.
 - **Confidence means something.** Scores are calibrated against hand-checked reports, so "high confidence" reads as "right N times out of M".
 - **Text messages carry their reasons.** A hidden-death claim quotes one report's sentence and report number, so it can be verified from the phone.
+- **Reproducible and light on compute.** One command rebuilds everything from the public API. The classifier runs on a laptop CPU with no per-report cost, and the full dataset ships as an 11 MB file.
+- **Public data only.** No patient identities. The hosted copy of the data contains no user data.
 - **Methods are stated, not hidden.** The page lists how each number was produced and what it cannot show.
 
 ---
