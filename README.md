@@ -4,6 +4,8 @@
 
 Rap Sheet turns the FDA's public adverse event and recall data into a plain-language record for one device: recalls, deaths, deaths filed under the wrong category, how late the manufacturer reports problems, and whether reports are rising. It answers by text message and links to a device page where every figure opens the FDA records it was counted from.
 
+**Live demo:** [54-172-47-121.sslip.io](https://54-172-47-121.sslip.io) · example: [LIFEPAK CR2 defibrillator](https://54-172-47-121.sslip.io/?d=physio--lifepak-cr2-defibrillator)
+
 **Why the name.** A rap sheet is the record a person carries of every time they were reported or charged. Medical devices have one too: the FDA's file of every problem ever reported about them. As with a person's record, an entry is an allegation, not a verdict, which is why every number here links to the report behind it.
 
 Built at HackPrinceton Fall 2026 · Healthcare track

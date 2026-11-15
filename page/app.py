@@ -8,6 +8,7 @@ import base64
 import html
 import json
 import os
+import re
 import sys
 
 import altair as alt
@@ -92,6 +93,286 @@ a.btn {{ display: inline-block; margin-top: .7rem; font-size: .85rem; font-weigh
 .miss .q {{ font-size: .85rem; color: #1f2937; margin: .45rem 0; line-height: 1.5; }}
 @media (max-width: 900px) {{ .kpis, .flow {{ grid-template-columns: repeat(2, 1fr); }} .wit {{ grid-template-columns: 1fr; }}
   .block-container {{ padding: 3.4rem 1rem .8rem; }} }}
+</style>""", unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------- section 1 design: paper record on navy
+NAVY, CLIP, PAPER_BG = "#2f3e6b", "#c0392b", "#eef0f5"
+st.markdown(f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@500;600&display=swap');
+html, body, [class*="css"], p, li, label, .stMarkdown {{ font-family: 'IBM Plex Sans', sans-serif; }}
+.stApp {{ background: linear-gradient({NAVY} 0, {NAVY} 300px, {PAPER_BG} 300px); }}
+header[data-testid="stHeader"] {{ background: transparent; }}
+.block-container {{ padding: 2.2rem 2.2rem 2rem; max-width: 1240px; }}
+.brand {{ display: flex; align-items: center; gap: 1rem; color: #fff; font-weight: 700; font-size: 2.3rem;
+          letter-spacing: -.01em; padding-top: .1rem; }}
+.brand img {{ height: 3.9rem; border-radius: 14px; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }}
+/* Search: a clear search box on the navy band. White box, dark text, magnifier icon, hint that clears on focus. */
+.st-key-search [data-baseweb="input"] {{ background: #fff !important; border: 2px solid rgba(255,255,255,.55) !important;
+    border-radius: 999px !important; box-shadow: 0 6px 18px rgba(15,23,42,.25); }}
+.st-key-search [data-baseweb="input"]:focus-within {{ border-color: #fff !important; box-shadow: 0 0 0 4px rgba(255,255,255,.25); }}
+.st-key-search [data-baseweb="base-input"] {{ background: transparent !important; }}
+.st-key-search input {{ background: transparent !important; color: #111827 !important; -webkit-text-fill-color: #111827 !important;
+    caret-color: {NAVY}; font-size: 1rem !important; height: 2.9rem; padding-left: 2.9rem !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important; background-position: 1rem center !important; }}
+.st-key-search input::placeholder {{ color: #9ca3af !important; -webkit-text-fill-color: #9ca3af !important; opacity: 1; }}
+.st-key-search input:focus::placeholder {{ color: transparent !important; -webkit-text-fill-color: transparent !important; }}
+.st-key-search [data-testid="InputInstructions"] {{ display: none; }}
+.st-key-paper, .st-key-home {{ background: #fff; border-radius: 14px; padding: 2.4rem 3rem 1.6rem; position: relative;
+                              margin-top: 1.6rem; box-shadow: 0 12px 40px rgba(15,23,42,.18); }}
+.st-key-paper::before, .st-key-home::before {{ content: ""; position: absolute; top: -.62rem; left: 50%;
+    transform: translateX(-50%); width: 5.5rem; height: 1.25rem; background: {CLIP}; border-radius: 6px; }}
+.rec-eyebrow {{ display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+               font-family: 'IBM Plex Mono', monospace; font-size: .92rem; font-weight: 500; letter-spacing: .06em;
+               color: #374151; text-transform: uppercase; }}
+.rec-title {{ font-family: 'Playfair Display', Georgia, serif; font-weight: 500; color: {NAVY};
+             font-size: 3.1rem; line-height: 1.1; margin: .55rem 0 1.4rem; }}
+.facts {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; align-items: end; }}
+.fact .k {{ font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .08em; color: {NAVY};
+           text-transform: uppercase; }}
+.fact .v {{ font-size: 1.3rem; font-weight: 500; color: #1f2937; padding: .35rem 0 .45rem;
+           border-bottom: 1.5px solid #d1d5db; }}
+/* Highlighter-pen labels: grey-blue for neutral facts, light red for the alarming ones. */
+.fact .k {{ display: inline-block; background: #dde2ee; padding: .18rem .45rem .14rem; border-radius: 3px; }}
+.fact.alarm .v {{ color: {CLIP}; font-weight: 600; }}
+.fact.alarm .v {{ border-bottom-color: {CLIP}; }}
+.rec-note {{ font-size: .85rem; color: #6b7280; margin: 1.1rem 0 2.6rem; }}
+/* Tabs as equal segments: thin dividers between them, a navy bar on top of the selected one. */
+.st-key-paper [data-testid="stTabs"] {{ width: 100%; }}
+.st-key-paper [role="tablist"] {{ display: flex !important; width: 100% !important; gap: 0 !important;
+    border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }}
+.st-key-paper [role="tablist"] > div {{ display: flex !important; width: 100% !important; gap: 0 !important; }}
+.st-key-paper [role="tab"] {{ flex: 1 1 0 !important; min-width: 0; justify-content: center !important; height: 3.2rem;
+    margin: 0 !important; padding: 0 .5rem !important; font-weight: 500; color: #374151;
+    border-right: 1px solid #e5e7eb !important; }}
+.st-key-paper [role="tab"]:last-of-type {{ border-right: none !important; }}
+.st-key-paper [role="tab"][aria-selected="true"] {{ box-shadow: inset 0 3px 0 {NAVY}; background: #fbfbfd; color: {NAVY};
+    font-weight: 600; }}
+.st-key-paper [data-baseweb="tab-highlight"], .st-key-paper [data-baseweb="tab-border"] {{ display: none !important; }}
+.st-key-paper [role="tab"] p {{ font-size: 1.02rem; }}
+.cards {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; margin: 1.6rem 0 1rem; }}
+.card {{ background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.6rem 1.5rem 1.2rem;
+        display: flex; flex-direction: column; }}
+.card.main {{ background: #f3f7fe; border: 1.5px solid #b9cdf2; }}
+.card .lab {{ font-family: 'IBM Plex Mono', monospace; font-size: .76rem; letter-spacing: .1em; color: #4b5563;
+             text-transform: uppercase; }}
+.card.main .lab {{ color: #1d4ed8; }}
+.card .num {{ font-family: 'Playfair Display', Georgia, serif; font-size: 3.1rem; font-weight: 500; color: #1f2937;
+             line-height: 1.05; margin: 1.1rem 0 .9rem; }}
+.card.main .num {{ color: #b3261e; }}
+.card .desc {{ font-size: 1rem; font-weight: 500; color: #1f2937; line-height: 1.35; }}
+.card .open {{ color: #b3261e; font-weight: 600; font-size: .9rem; margin-top: .45rem; }}
+.card .open::before {{ content: ""; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%;
+                      background: #b3261e; margin-right: .45rem; vertical-align: .08rem; }}
+.tag {{ display: inline-flex; align-items: center; gap: .35rem; align-self: flex-start; font-size: .78rem; font-weight: 600;
+       padding: .28rem .7rem; border-radius: 999px; margin-top: .8rem; }}
+.tag.fda {{ background: #e8f3ec; color: #1b6b3a; }}
+.tag.model {{ background: #dfe9fb; color: #1d4ed8; }}
+.card .dots {{ display: flex; flex-wrap: wrap; gap: 4px; margin-top: 1.1rem; max-width: 15rem; }}
+.card .dots span {{ width: .7rem; height: .7rem; border-radius: 50%; background: #1d4ed8; }}
+.card .dots span.x {{ background: transparent; box-shadow: inset 0 0 0 1.5px #93b0e6; }}
+.card .proof {{ font-size: .85rem; color: #4b5563; margin-top: .6rem; line-height: 1.45; }}
+.card .foot {{ margin-top: auto; padding-top: 1.4rem; }}
+.card .foot a {{ display: block; border-top: 1px dashed #d1d5db; padding-top: .9rem; font-size: .92rem; font-weight: 600; color: {NAVY};
+                  text-decoration: underline; text-underline-offset: 3px; }}
+.legend {{ font-size: .9rem; color: #4b5563; margin: 0 0 2rem; display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; }}
+.legend b {{ font-weight: 600; }}
+.legend .sq {{ display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; margin-right: .35rem; vertical-align: -.05rem; }}
+.st-key-chartcard, .st-key-evcard {{ background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: 1.6rem 1.7rem 1.2rem; }}
+.c-title {{ font-family: 'Playfair Display', Georgia, serif; font-size: 1.55rem; font-weight: 500; color: {NAVY}; }}
+.c-sub {{ font-size: .95rem; color: #4b5563; margin: .3rem 0 .9rem; line-height: 1.45; }}
+.c-legend {{ display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.2rem; font-size: .9rem; color: #374151; }}
+.c-legend b {{ font-weight: 600; color: #1f2937; }}
+.c-legend .sw {{ display: inline-block; width: .75rem; height: .75rem; border-radius: 2px; margin-right: .35rem; vertical-align: -.08rem; }}
+.c-legend .sep {{ width: 1px; height: 1rem; background: #d1d5db; }}
+.strip-lab {{ font-size: .9rem; font-weight: 600; color: #4b5563; margin: 1rem 0 .15rem 2.75rem; line-height: 1.4;
+              position: relative; z-index: 2; }}
+.strip-lab small {{ font-weight: 400; color: #6b7280; font-size: .82rem; }}
+.st-key-chartcard [data-testid="stVegaLiteChart"], .st-key-chartcard2 [data-testid="stVegaLiteChart"] {{ margin-top: 0; }}
+.strip-lab.red {{ color: #b3261e; }}
+.hl {{ display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: .8rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase; color: #1f2937; background: #fde68a; padding: .12rem .4rem;
+      border-radius: 3px; transform: rotate(-1deg); }}
+.ev-id {{ font-family: 'IBM Plex Mono', monospace; font-size: .86rem; color: #4b5563; margin: .5rem 0 .9rem; }}
+.ev-q {{ font-family: 'IBM Plex Mono', monospace; font-size: .86rem; line-height: 1.6; color: #1f2937;
+        background: #f6f5f0; border-radius: 6px; padding: 1rem 1.05rem; }}
+.ev-q mark {{ background: #fdecea; color: #b3261e; font-weight: 600; text-decoration: underline;
+             text-decoration-color: #b3261e; text-underline-offset: 3px; padding: 0 .15rem; border-radius: 3px; }}
+.wh {{ font-weight: 600; color: #1f2937; margin: 1.2rem 0 .55rem; }}
+.w3 {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; }}
+.w3 .b {{ border: 1px solid #e5e7eb; border-radius: 6px; padding: .6rem .7rem; font-size: .8rem; color: #4b5563; min-height: 4.6rem; }}
+.w3 .b strong {{ display: block; font-size: 1rem; color: #1f2937; margin-top: .2rem; line-height: 1.25; }}
+.w3 .b.odd {{ border: 1.5px dashed #9ca3af; }}
+.w3 .b.odd strong {{ text-decoration: line-through; text-decoration-thickness: 2px; }}
+.w3 .b.death {{ background: #fdecea; border-color: #f5c2bd; }}
+.w3 .b.death strong {{ color: #b3261e; }}
+.w3cap {{ display: grid; grid-template-columns: 1fr 2fr; gap: .55rem; font-size: .8rem; margin-top: .4rem; }}
+.w3cap .l {{ text-align: center; color: #4b5563; }}
+.w3cap .r {{ text-align: center; color: #b3261e; font-weight: 600; border-top: 2px solid #b3261e; padding-top: .3rem; }}
+.conf {{ background: #f3f7fe; border: 1px solid #d6e2f8; border-radius: 8px; padding: .9rem 1rem; margin-top: 1.1rem; }}
+.conf .h {{ font-size: .82rem; font-weight: 600; color: #1d4ed8; }}
+.conf .t {{ font-size: .95rem; color: #1f2937; margin-top: .45rem; line-height: 1.45; }}
+.conf .t b {{ color: #1d4ed8; }}
+.conf .dots {{ display: flex; flex-wrap: wrap; gap: 4px; margin-top: .7rem; }}
+.conf .dots span {{ width: .7rem; height: .7rem; border-radius: 50%; background: #1d4ed8; }}
+.conf .dots span.x {{ background: transparent; box-shadow: inset 0 0 0 1.5px #93b0e6; }}
+a.fda {{ display: inline-block; margin-top: 1rem; font-weight: 600; color: {NAVY}; text-decoration: underline;
+        text-underline-offset: 3px; }}
+a.below, .card .foot a {{ color: {NAVY} !important; }}
+a.below {{ font-size: .95rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }}
+a.below:hover, .card .foot a:hover {{ color: #1d4ed8 !important; }}
+@media (max-width: 900px) {{
+  .st-key-chartcard, .st-key-evcard {{ padding: 1.1rem .9rem 1rem; }}
+  .w3 {{ grid-template-columns: 1fr; }} .w3cap {{ display: none; }} }}
+.ev-h {{ font-family: 'Playfair Display', Georgia, serif; font-size: 2.05rem; font-weight: 500; color: {NAVY};
+         line-height: 1.2; margin: 1.6rem 0 .35rem; max-width: 46rem; }}
+.ev-h em {{ font-style: normal; color: #b3261e; }}
+.ev-top {{ display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }}
+.ev-sub {{ font-size: 1.02rem; color: #4b5563; margin-bottom: 1.4rem; }}
+.st-key-evlist, .st-key-whycard {{ background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.1rem 1.1rem .9rem; }}
+.st-key-whycard {{ border: 1.5px solid #c9d6ee; box-shadow: 0 8px 26px rgba(47,62,107,.10); padding: 1.6rem 1.7rem 1.4rem; }}
+.lst-h {{ display: flex; justify-content: space-between; font-size: .85rem; color: #6b7280; margin-bottom: .6rem; }}
+.lst-h .m {{ font-family: 'IBM Plex Mono', monospace; letter-spacing: .08em; color: {NAVY}; text-transform: uppercase; font-size: .76rem; }}
+.why-top {{ display: flex; justify-content: space-between; gap: 1rem; }}
+.why-score {{ text-align: right; }}
+.why-score .k {{ font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .1em; color: #6b7280; text-transform: uppercase; }}
+.why-score .v {{ font-family: 'Playfair Display', Georgia, serif; font-size: 2.2rem; color: #1d4ed8; line-height: 1.1; }}
+.step {{ display: flex; align-items: center; gap: .55rem; font-weight: 600; color: #1f2937; margin: 1.4rem 0 .6rem; }}
+.step .n {{ display: inline-flex; align-items: center; justify-content: center; width: 1.45rem; height: 1.45rem;
+           border-radius: 50%; background: {NAVY}; color: #fff; font-size: .78rem; font-weight: 600; }}
+.why-note {{ font-size: .88rem; color: #4b5563; margin-top: .55rem; }}
+.wbars {{ display: grid; grid-template-columns: 9rem 1fr 3.5rem; align-items: center; gap: .45rem .7rem; font-size: .92rem; }}
+.wbars .hd {{ font-size: .78rem; color: #6b7280; }}
+.wbars .t {{ text-align: right; color: #1f2937; }}
+.wbars .track {{ position: relative; height: .7rem; }}
+.wbars .track span {{ position: absolute; top: 0; height: .7rem; border-radius: 2px; }}
+.wbars .track .zero {{ left: 12%; width: 1px; height: 1.2rem; top: -.25rem; background: #d1d5db; }}
+.wbars .num {{ font-family: 'IBM Plex Mono', monospace; font-size: .8rem; color: #1d4ed8; }}
+.wbars .num.neg {{ color: #6b7280; }}
+.sim {{ border: 1px solid #e5e7eb; border-radius: 6px; padding: .75rem .9rem; margin-top: .55rem; }}
+.sim .top {{ display: flex; justify-content: space-between; align-items: center; gap: .6rem;
+            font-family: 'IBM Plex Mono', monospace; font-size: .8rem; color: #4b5563; }}
+.sim .txt {{ font-family: 'IBM Plex Mono', monospace; font-size: .84rem; color: #1f2937; margin-top: .5rem; line-height: 1.5; }}
+.sim .txt mark {{ background: none; color: #b3261e; font-weight: 600; }}
+.who {{ font-family: 'IBM Plex Sans', sans-serif; font-size: .74rem; font-weight: 600; padding: .2rem .55rem; border-radius: 999px;
+       white-space: nowrap; }}
+.who.person {{ background: #dfe9fb; color: #1d4ed8; }}
+.who.llm {{ background: #f3f4f6; color: #374151; border: 1px dashed #9ca3af; }}
+.why-actions {{ border-top: 1px solid #e5e7eb; margin-top: 1.4rem; padding-top: 1.1rem; display: flex; gap: .7rem; flex-wrap: wrap; }}
+a.b1, a.b2 {{ display: inline-block; padding: .7rem 1.1rem; border-radius: 6px; font-weight: 600; font-size: .95rem;
+             text-decoration: none; }}
+a.b1 {{ background: {NAVY}; color: #fff !important; }}
+a.b2 {{ border: 1px solid #d1d5db; color: {NAVY} !important; }}
+.st-key-paper [data-testid="stExpander"] {{ background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; margin-top: .9rem; }}
+.st-key-paper [data-testid="stExpander"] summary p {{ font-size: 1.02rem; font-weight: 600; color: #1f2937; }}
+@media (max-width: 900px) {{
+  .ev-h {{ font-size: 1.5rem; }} .ev-top {{ flex-direction: column; }}
+  .st-key-whycard {{ padding: 1.1rem .9rem 1rem; }}
+  .wbars {{ grid-template-columns: 6.5rem 1fr 3rem; }} }}
+.pcard, .st-key-chartcard2, .st-key-latecard, .st-key-calcard, .st-key-srccard {{ background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 10px; padding: 1.5rem 1.6rem 1.3rem; margin-top: 1.1rem; }}
+.st-key-chartcard2 {{ margin-top: 1.6rem; }}
+.lab2 {{ font-family: 'IBM Plex Mono', monospace; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: {NAVY}; }}
+.st {{ display: inline-block; font-size: .76rem; font-weight: 600; padding: .18rem .6rem; border-radius: 999px; margin-left: .4rem;
+      background: #f3f4f6; color: #374151; vertical-align: .1rem; }}
+.st.open {{ background: #fdecea; color: #b3261e; border: 1px solid #f5c2bd; }}
+.st.open::before {{ content: ""; display: inline-block; width: .42rem; height: .42rem; border-radius: 50%; background: #b3261e;
+                   margin-right: .35rem; vertical-align: .06rem; }}
+.tl-top {{ display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.2rem; }}
+.tl-leg {{ display: flex; gap: 1.1rem; font-size: .88rem; color: #4b5563; }}
+.tl {{ position: relative; }}
+.tl::before {{ content: ""; position: absolute; left: 1.05rem; top: 1rem; bottom: 1rem; width: 1px; background: #d1d5db; }}
+.tl-row {{ display: grid; grid-template-columns: 2.2rem 9.5rem 1fr; gap: 1.1rem; align-items: start; margin-bottom: 1.5rem; position: relative; }}
+.tl-ic {{ width: 2.2rem; height: 2.2rem; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+         background: #fff; border: 1.5px solid #9ca3af; border-radius: 50%; color: #4b5563; z-index: 1; }}
+.tl-ic.rising {{ background: #1f2937; border-color: #1f2937; color: #fff; }}
+.tl-ic.recall {{ background: {NAVY}; border-color: {NAVY}; color: #fff; border-radius: 6px; }}
+.tl-when .d {{ font-family: 'IBM Plex Mono', monospace; font-size: .98rem; color: #1f2937; }}
+.tl-when .k {{ font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: #6b7280; margin-top: .2rem; }}
+.tl-what .h {{ font-weight: 600; color: #1f2937; font-size: 1.02rem; }}
+.tl-what .p {{ color: #4b5563; font-size: .95rem; line-height: 1.5; margin-top: .3rem; }}
+.tl-what.box {{ background: #f3f4f8; border: 1px solid #e0e3ec; border-radius: 6px; padding: .9rem 1rem; }}
+.limit {{ background: #fdf9e6; border: 1px solid #f1e6b5; border-radius: 10px; padding: 1.4rem 1.4rem 1.2rem; margin-top: 1.1rem; }}
+.limit .big {{ font-family: 'Playfair Display', Georgia, serif; font-size: 1.25rem; color: #1f2937; line-height: 1.4; margin: .9rem 0 1.1rem; }}
+.limit .lb, .peers .pr {{ display: grid; grid-template-columns: 6.5rem 1fr 3rem; align-items: center; gap: .6rem; font-size: .88rem;
+    color: #374151; margin: .45rem 0; }}
+.limit .tr, .peers .tr, .mrow .tr {{ height: .5rem; background: #ece9d8; border-radius: 3px; overflow: hidden; }}
+.peers .tr, .mrow .tr {{ background: #efeff1; height: .85rem; }}
+.limit .tr i, .peers .tr i, .mrow .tr i {{ display: block; height: 100%; border-radius: 3px; }}
+.limit .end {{ margin-top: 1rem; font-size: .95rem; color: #1f2937; }}
+.rgrid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.4rem; }}
+.rcard {{ background: #fff; border: 1px solid #e5e7eb; border-top: 3px solid {NAVY}; border-radius: 8px; padding: 1.3rem 1.4rem 1rem; }}
+.rcard .rtop {{ display: flex; justify-content: space-between; align-items: center; gap: .6rem; }}
+.rcard .num {{ font-family: 'IBM Plex Mono', monospace; font-size: 1.15rem; color: {NAVY}; font-weight: 500; }}
+.rcard .when {{ font-family: 'IBM Plex Mono', monospace; font-size: .86rem; color: #4b5563; margin: .3rem 0 1rem; }}
+.rcard .why {{ font-size: 1.02rem; color: #1f2937; line-height: 1.45; margin: .35rem 0 1rem; }}
+.rcard .desc2 {{ font-family: 'IBM Plex Mono', monospace; font-size: .82rem; color: #4b5563; line-height: 1.5; margin-top: .35rem; }}
+.rcard .desc2 mark {{ background: #fde68a; color: #1f2937; font-weight: 600; padding: 0 .2rem; border-radius: 2px; }}
+.rcard .rfoot {{ display: flex; justify-content: space-between; gap: .8rem; flex-wrap: wrap; border-top: 1px dashed #d1d5db;
+                margin-top: 1rem; padding-top: .8rem; font-size: .88rem; color: #4b5563; }}
+.rcard .rfoot a, .wr a, .src2 a {{ color: {NAVY} !important; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }}
+.late-top {{ display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1rem; margin-bottom: 1.2rem; }}
+.late-h {{ display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }}
+.late-h .n {{ font-family: 'Playfair Display', Georgia, serif; font-size: 3.6rem; color: #1f2937; line-height: 1; }}
+.late-h .s {{ font-family: 'Playfair Display', Georgia, serif; font-size: 1.35rem; color: #1f2937; max-width: 32rem; line-height: 1.35; }}
+.peers {{ margin-top: 1rem; }}
+.peers .pr {{ grid-template-columns: 9rem 1fr 3.4rem; font-size: .95rem; margin: .8rem 0; }}
+.peers .pr span {{ text-align: right; }} .peers .pr b {{ font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: .86rem; }}
+.peers .pr i {{ background: #cdd2dc; }} .peers .pr.me i {{ background: {NAVY}; }}
+.peers .pr.me span, .peers .pr.me b {{ color: {NAVY}; font-weight: 700; }}
+.hero {{ background: {NAVY}; border-radius: 10px; padding: 2rem 2.2rem; margin-top: 1.6rem; display: grid;
+        grid-template-columns: 1fr auto; gap: 2.5rem; align-items: center; color: #fff; }}
+.hero .k {{ font-family: 'IBM Plex Mono', monospace; font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: #c8cfe3; }}
+.hero .h {{ font-family: 'Playfair Display', Georgia, serif; font-size: 1.9rem; line-height: 1.3; margin: .6rem 0 .7rem; color: #fff; }}
+.hero .h em {{ font-style: normal; color: #f6c945; }}
+.hero .p {{ font-size: .95rem; color: #dfe3ef; }}
+.hero .side {{ border-left: 1px solid rgba(255,255,255,.25); padding-left: 2.2rem; }}
+.hero .side .v {{ font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; margin: .4rem 0 .3rem; }}
+.flow2 {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; padding: 1.2rem 1rem; }}
+.flow2 .fs {{ padding: 0 1.2rem; border-left: 1px solid #e5e7eb; }} .flow2 .fs:first-child {{ border-left: none; }}
+.flow2 .v {{ font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; color: {NAVY}; }}
+.flow2 .l {{ font-size: .88rem; color: #4b5563; line-height: 1.4; margin-top: .15rem; }}
+.mrow {{ display: grid; grid-template-columns: 11rem 1fr 1fr; gap: 1.2rem; align-items: center; padding: .9rem .6rem;
+        border-bottom: 1px solid #eef0f3; }}
+.mrow.hd {{ font-size: .82rem; font-weight: 600; color: #374151; border-bottom: none; padding-bottom: .2rem; }}
+.mrow .nm {{ font-weight: 600; color: #1f2937; font-size: .95rem; }}
+.mrow .cap {{ font-family: 'IBM Plex Mono', monospace; font-size: .8rem; color: #4b5563; margin-top: .35rem; }}
+.mrow.ours {{ background: #f3f7fe; border-radius: 6px; border-bottom: none; }}
+.mrow.ours .nm, .mrow.ours .cap {{ color: #1d4ed8; }}
+.wr {{ border: 1px solid #e5e7eb; border-left: 3px solid #6b7280; border-radius: 6px; padding: .8rem 1rem; margin-bottom: .8rem; }}
+.wr .top {{ display: flex; justify-content: space-between; gap: .6rem; font-family: 'IBM Plex Mono', monospace; font-size: .8rem; color: #4b5563; }}
+.wr .txt {{ font-family: 'IBM Plex Mono', monospace; font-size: .82rem; color: #1f2937; line-height: 1.55; margin: .55rem 0; }}
+.wr .txt mark {{ background: none; color: inherit; text-decoration: underline; text-decoration-color: #b3261e; text-underline-offset: 3px; }}
+.wr .rs {{ font-size: .9rem; color: #374151; }}
+.cant div {{ font-size: .98rem; color: #1f2937; line-height: 1.5; margin: .9rem 0 0; padding-left: 1.6rem; position: relative; }}
+.cant div::before {{ content: "!"; position: absolute; left: 0; top: .12rem; width: 1.05rem; height: 1.05rem; border: 1.5px solid #6b7280;
+    border-radius: 50%; font-size: .7rem; font-weight: 700; color: #6b7280; display: flex; align-items: center; justify-content: center; }}
+.src2 {{ display: grid; grid-template-columns: 5.5rem 1fr; gap: .5rem 1rem; font-size: .95rem; color: #1f2937; }}
+.src2 span {{ font-family: 'IBM Plex Mono', monospace; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: {NAVY};
+             padding-top: .15rem; }}
+.st-key-srccard button[kind="primary"] {{ background: {NAVY}; border-color: {NAVY}; }}
+@media (max-width: 900px) {{
+  .rgrid, .hero {{ grid-template-columns: 1fr; }} .hero .side {{ border-left: none; padding-left: 0; }}
+  .hero .h {{ font-size: 1.4rem; }} .flow2 {{ grid-template-columns: 1fr 1fr; gap: 1rem 0; }}
+  .tl-row {{ grid-template-columns: 2.2rem 1fr; }} .tl-what {{ grid-column: 2; }}
+  .mrow {{ grid-template-columns: 1fr; gap: .5rem; }} .mrow.hd {{ display: none; }}
+  .late-h .n {{ font-size: 2.6rem; }} .late-h .s {{ font-size: 1.1rem; }} }}
+@media (max-width: 900px) {{
+  .block-container {{ padding: 1.4rem .8rem .8rem; }}
+  .st-key-paper, .st-key-home {{ padding: 1.8rem 1.1rem 1rem; }}
+  .rec-title {{ font-size: 2.1rem; }}
+  .brand {{ font-size: 1.5rem; }} .brand img {{ height: 2.6rem; }}
+  .rec-eyebrow {{ font-size: .78rem; }}
+  .st-key-paper [role="tablist"], .st-key-paper [role="tablist"] > div {{ overflow-x: auto; }}
+  .st-key-paper [role="tab"] {{ flex: 0 0 auto !important; padding: 0 .9rem !important; }}
+  .cards {{ grid-template-columns: repeat(2, 1fr); gap: .8rem; }}
+  .card {{ padding: 1.1rem 1rem; }} .card .num {{ font-size: 2.4rem; }}
+  .facts {{ grid-template-columns: repeat(2, 1fr); gap: 1.1rem 1.4rem; }}
+  .st-key-paper .stTabs [data-baseweb="tab-list"] {{ gap: 1.2rem; overflow-x: auto; }} }}
 </style>""", unsafe_allow_html=True)
 
 
@@ -220,10 +501,10 @@ def chart_cfg(c, height):
 # ---------------------------------------------------------------- top bar
 using_sample = not has_data()
 key = st.query_params.get("d")
-c_logo, c_search, c_pick = st.columns([1.1, 2.4, 2.5])
-c_logo.markdown(f'<div class="logo"><img src="{LOGO}" alt="" style="height:1.9rem;vertical-align:-0.5rem;'
-                f'margin-right:.5rem">Rap Sheet</div>', unsafe_allow_html=True)
-q = c_search.text_input("Search a device", placeholder="Search a device: LIFEPAK CR2, HeartStart FRx, DreamStation",
+c_logo, c_search = st.columns([3, 2], vertical_alignment="center")
+c_pick = c_search
+c_logo.markdown(f'<div class="brand"><img src="{LOGO}" alt="">Rap Sheet</div>', unsafe_allow_html=True)
+q = c_search.text_input("Search a device", placeholder="Search for a device, e.g. LIFEPAK CR2", key="search",
                         label_visibility="collapsed")
 if q and not using_sample:
     matches = search(q)
@@ -238,8 +519,9 @@ rec = record.sample_record() if using_sample else (build(key) if key else None)
 if using_sample:
     st.warning("Showing made-up example data. Run the pipeline to load real FDA reports.")
 if not rec:
-    st.markdown("<div style='padding:4rem 0;text-align:center;color:#6b7280'>"
-                "<div style='font-size:1.6rem;font-weight:800;color:#111827'>The safety record of any medical device</div>"
+    home = st.container(key="home")
+    home.markdown("<div style='padding:1.5rem 0 1rem;text-align:center;color:#6b7280'>"
+                "<div class='rec-title' style='margin:0 0 .6rem'>The safety record of any medical device</div>"
                 "<div style='margin-top:.5rem'>Search a device above. Every number comes from the FDA's public reports "
                 "and links to them.</div></div>", unsafe_allow_html=True)
     # Starting points, so a first-time visitor has something to open. Only devices that are in the data.
@@ -249,8 +531,8 @@ if not rec:
         links = " ".join(f'<a href="?d={esc(k)}" target="_self" style="display:inline-block;margin:.3rem;padding:.55rem 1rem;'
                          f'border:1px solid #cbd5e1;border-radius:999px;color:#111827;text-decoration:none;'
                          f'font-weight:600">{esc(n)}</a>' for n, k in examples)
-        st.markdown(f"<div style='text-align:center;margin-top:-2.5rem'><div style='color:#6b7280;"
-                    f"margin-bottom:.4rem'>Or open an example:</div>{links}</div>", unsafe_allow_html=True)
+        home.markdown(f"<div style='text-align:center;margin:.5rem 0 1.5rem'><div style='color:#6b7280;"
+                      f"margin-bottom:.4rem'>Or open an example:</div>{links}</div>", unsafe_allow_html=True)
     st.stop()
 
 d, t, m = rec["device"], rec["totals"], rec["manufacturer"]
@@ -267,20 +549,34 @@ open_recalls = [r for r in rec["recalls"] if "terminated" not in (r["status"] or
 
 # ---------------------------------------------------------------- device header
 kind = {"MKJ": "Defibrillator (AED)", "BZD": "CPAP / BiPAP machine"}.get(d["product_code"], "Medical device")
-pills = []
-if open_recalls:
-    pills.append(f'<span class="pill red">● {len(open_recalls)} open recall{"s" if len(open_recalls) != 1 else ""}</span>')
-if hidden_n:
-    pills.append(f'<span class="pill red">{hidden_n} deaths filed as something else</span>')
-pills.append('<span class="pill red">Reports rising</span>' if rec["warning"]["spiking_now"]
-             else '<span class="pill">Reports steady</span>')
-pills.append(f'<span class="pill blue">{esc(kind)}</span>')
-st.markdown(f"""<div class="devhead"><div><div class="devname">{esc(d['brand'])}</div>
-  <div class="devsub">{esc(maker)} · {t['reports']:,} FDA reports · {esc(rec['period']['first'][:7])} to {esc(rec['period']['last'][:7])}</div></div>
-  <div class="pills">{''.join(pills)}</div></div>""", unsafe_allow_html=True)
+n_rec, rising = len(rec["recalls"]), rec["warning"]["spiking_now"]
+thing_plural = {"MKJ": "AED", "BZD": "CPAP"}.get(d["product_code"], "device")
+facts = [
+    ("Recalls", f"{len(open_recalls)} open" if open_recalls else (f"{n_rec} closed" if n_rec else "None found"),
+     bool(open_recalls)),
+    ("Deaths filed as something else", f"{hidden_n:,}" if hidden_n is not None else "Not scored", bool(hidden_n)),
+    ("Reports", "Rising" if rising else "Steady", rising),
+    ("Device type", kind, False),
+]
+fact_html = "".join(f'<div class="fact{" alarm" if alarm else ""}"><div class="k">{esc(k)}</div>'
+                    f'<div class="v">{esc(v)}</div></div>' for k, v, alarm in facts)
+paper = st.container(key="paper")
+paper.markdown(f"""<div class="rec-eyebrow"><span>FDA safety record</span>
+  <span>{esc(maker)} · {t['reports']:,} reports · {esc(rec['period']['first'][:7])} to {esc(rec['period']['last'][:7])}</span></div>
+  <div class="rec-title">{esc(d['brand'])}</div>
+  <div class="facts">{fact_html}</div>
+  <div class="rec-note">From the FDA's public reports. A report is an allegation, not proof.</div>""",
+               unsafe_allow_html=True)
+TAB_LABELS = {"overview": "Overview", "evidence": f"Evidence :gray-background[{hidden_n or 0}]",
+              "timeline": "Timeline", "recalls": "Recalls & filing", "trust": "Why trust this"}
+# A link such as ?d=<device>&tab=evidence opens that tab when the page loads.
+tab_over, tab_ev, tab_time, tab_rec, tab_trust = paper.tabs(
+    list(TAB_LABELS.values()), default=TAB_LABELS.get(st.query_params.get("tab", ""), "Overview"))
 
-tab_over, tab_ev, tab_time, tab_rec, tab_trust = st.tabs(
-    ["Overview", f"Evidence ({hidden_n or 0})", "Timeline", "Recalls & filing", "Why trust this"])
+
+def tab_link(tab: str, text: str, cls: str = "") -> str:
+    """An HTML link that reopens this device's page on the given tab."""
+    return (f'<a class="{cls}" href="?d={esc(rec["device_key"])}&tab={tab}" target="_self">{text}</a>')
 
 
 # ---------------------------------------------------------------- shared pieces
@@ -293,13 +589,28 @@ def kpis():
                  f'the model\'s answer</div>')
     else:
         proof = ""
-    st.markdown(f"""<div class="kpis">
-      <div class="kpi"><div class="v">{t['deaths_coded']:,}</div><div class="l">Deaths filed as deaths</div>{fda}</div>
-      <div class="kpi red"><div class="v">{hidden_n if hidden_n is not None else '–'}</div>
-        <div class="l">Deaths filed as malfunction or injury</div>
-        <span class="src model">◎ Our model · checked by hand</span>{proof}</div>
-      <div class="kpi"><div class="v">{late}</div><div class="l">Maker's reports filed after the 30-day deadline</div>{fda}</div>
-      <div class="kpi"><div class="v">{len(rec['recalls'])}</div><div class="l">Recalls for this model ({len(open_recalls)} open)</div>{fda}</div>
+    fda = '<span class="tag fda">&#10003; FDA record, no model</span>'
+    person = ('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">'
+              '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>')
+    if clf:
+        right, total = clf["true_pos"], clf["true_pos"] + clf["false_pos"]
+        proof = (f'{dots(right, total)}<div class="proof">{right} of {total} confirmed by a person who never saw '
+                 f'the model\'s answer</div>')
+    else:
+        proof = ""
+    foot = lambda tab, where: f'<div class="foot">{tab_link(tab, f"See the reports in the {where} tab &rarr;")}</div>'
+    still_open = f'<div class="open">{len(open_recalls)} still open</div>' if open_recalls else ""
+    st.markdown(f"""<div class="cards">
+      <div class="card"><div class="lab">Deaths</div><div class="num">{t['deaths_coded']:,}</div>
+        <div class="desc">Deaths filed as deaths</div>{fda}{foot("evidence", "Evidence")}</div>
+      <div class="card main"><div class="lab">Main finding</div>
+        <div class="num">{hidden_n if hidden_n is not None else '&ndash;'}</div>
+        <div class="desc">Deaths filed as malfunction or injury</div>
+        <span class="tag model">{person} Our model, checked by hand</span>{proof}{foot("evidence", "Evidence")}</div>
+      <div class="card"><div class="lab">Late filing</div><div class="num">{late}</div>
+        <div class="desc">Maker's reports filed after the 30-day legal deadline</div>{fda}{foot("recalls", "Recalls &amp; filing")}</div>
+      <div class="card"><div class="lab">Recalls</div><div class="num">{len(rec['recalls'])}</div>
+        <div class="desc">Recalls for this model</div>{still_open}{fda}{foot("recalls", "Recalls &amp; filing")}</div>
     </div>""", unsafe_allow_html=True)
 
 
@@ -361,6 +672,127 @@ def timeline_chart(height=280, labels=True):
             st.altair_chart(chart_cfg(strip, 70), width="stretch")
 
 
+AXW = 44     # width of the left axis, shared by the chart and its strips so they line up
+
+
+def chart_card(rec_n_coded, rec_n_hidden):
+    """Section 3, left: reports per month with recalls, unusual jumps and the two death strips."""
+    if using_sample:
+        months = pd.DataFrame(rec["months"]).rename(columns={"n_reports": "n"}).assign(event_type="Malfunction")
+    else:
+        months = pd.DataFrame(months_by_type(rec["device_key"]))
+        months["event_type"] = months["event_type"].where(months["event_type"].isin(EVENT_COLORS), "Other")
+    if months.empty:
+        st.caption("No reports.")
+        return
+    months["date"] = pd.to_datetime(months["month"] + "-01")
+    lo, hi = months["date"].min(), months["date"].max() + pd.offsets.MonthEnd(0)
+    xs = alt.Scale(domain=[lo.isoformat(), hi.isoformat()])
+    y0, y1 = months["date"].min().year, months["date"].max().year
+    st.markdown(f"""<div class="c-title">Reports per month, {y0} to {y1}</div>
+      <div class="c-sub">Each bar is one month of FDA reports, split by how the maker filed them. The strips below show
+      when deaths were reported.</div>
+      <div class="c-legend"><b>Filed as</b>
+        <span><span class="sw" style="background:#c0392b"></span>Death</span>
+        <span><span class="sw" style="background:#e08a1e"></span>Injury</span>
+        <span><span class="sw" style="background:#cdd2dc"></span>Malfunction</span>
+        <span class="sep"></span><span>&#9660; Unusual jump</span>
+        <span>&#8942; Recall started</span></div>""", unsafe_allow_html=True)
+    colors = {"Death": "#c0392b", "Injury": "#e08a1e", "Malfunction": "#cdd2dc", "Other": "#e5e7eb", "Not given": "#eef0f3"}
+    domain = [k for k in colors if k in set(months["event_type"])]
+    order = {"Death": 0, "Injury": 1, "Malfunction": 2, "Other": 3, "Not given": 4}
+    months["o"] = months["event_type"].map(order)
+    xaxis = alt.Axis(format="%Y", tickCount="year", grid=False, labelFontSize=12, labelColor="#4b5563", domainColor="#d1d5db")
+    yaxis = alt.Axis(tickCount=4, minExtent=AXW, maxExtent=AXW, labelColor="#6b7280", gridColor="#eef0f3", domain=False, ticks=False)
+    layers = [alt.Chart(months).mark_bar(width=4).encode(
+        x=alt.X("date:T", title=None, scale=xs, axis=xaxis), y=alt.Y("sum(n):Q", title=None, axis=yaxis),
+        color=alt.Color("event_type:N", legend=None, scale=alt.Scale(domain=domain, range=[colors[k] for k in domain])),
+        order=alt.Order("o:Q"),
+        tooltip=[alt.Tooltip("date:T", title="Month", format="%b %Y"), alt.Tooltip("event_type:N", title="Filed as"),
+                 alt.Tooltip("n:Q", title="Reports")])]
+    recalls = pd.DataFrame([{"date": pd.to_datetime(r["date"]), "num": r["number"], "reason": (r["reason"] or "")[:140]}
+                            for r in rec["recalls"] if r.get("date") and pd.to_datetime(r["date"]) >= lo])
+    if not recalls.empty:
+        layers += [
+            alt.Chart(recalls).mark_rule(color="#1f2937", strokeDash=[4, 3], size=1.4).encode(
+                x="date:T", tooltip=[alt.Tooltip("num:N", title="Recall"), alt.Tooltip("reason:N", title="Reason")]),
+            alt.Chart(recalls).mark_text(align="left", dx=5, fontSize=11, fontWeight=700, color=NAVY).encode(
+                x="date:T", y=alt.value(-30), text=alt.value("Recall started")),
+            alt.Chart(recalls).mark_text(align="left", dx=5, fontSize=11, font="IBM Plex Mono", color="#4b5563").encode(
+                x="date:T", y=alt.value(-16), text="num:N")]
+    spikes = pd.DataFrame([{"date": pd.to_datetime(x["month"] + "-01")} for x in rec["months"] if x.get("spike")])
+    if not spikes.empty:
+        tot = months.groupby("date")["n"].sum().rename("n").reset_index()
+        spikes = spikes.merge(tot, on="date", how="left").fillna(0)
+        layers.append(alt.Chart(spikes).mark_point(shape="triangle-down", filled=True, size=55, color="#1f2937",
+                                                   yOffset=-9).encode(
+            x="date:T", y="n:Q", tooltip=alt.value("Reports far above this device's usual level")))
+        top = spikes.sort_values("n").tail(1)
+        layers += [
+            alt.Chart(top).mark_text(align="right", dx=-14, dy=-9, fontSize=11.5, fontWeight=700, color="#1f2937").encode(
+                x="date:T", y="n:Q", text=alt.value("Unusual jump")),
+            alt.Chart(top).mark_text(align="right", dx=-14, dy=5, fontSize=10, color="#6b7280").encode(
+                x="date:T", y="n:Q", text=alt.value("far above this device's usual month"))]
+    chart = (alt.layer(*layers).properties(height=300, padding={"top": 38, "left": 0, "right": 10, "bottom": 0})
+             .configure_view(stroke=None).configure_axis(labelFont="IBM Plex Sans"))
+    st.altair_chart(chart, width="stretch")
+
+    dm = pd.DataFrame(rec["months"])
+    if dm.empty or not {"n_deaths_coded", "n_deaths_hidden"} <= set(dm.columns):
+        return
+    dm["date"] = pd.to_datetime(dm["month"] + "-01")
+    strips = [("n_deaths_coded", f"Filed as death &middot; {rec_n_coded:,} reports", "#6b7280", ""),
+              ("n_deaths_hidden", f"Filed as malfunction, but the text describes a death &middot; {rec_n_hidden or 0:,} reports",
+               "#c0392b", " red")]
+    for col, label, color, cls in strips:
+        pts = dm[dm[col] > 0][["date", col]].rename(columns={col: "n"})
+        st.markdown(f'<div class="strip-lab{cls}">{label} <small>&nbsp;Each dot is a month; a bigger dot means more '
+                    f'reports that month.</small></div>', unsafe_allow_html=True)
+        base = [alt.Chart(pd.DataFrame({"date": [lo, hi]})).mark_rule(color="#eef0f3").encode(
+                    x=alt.X("date:T", scale=xs, axis=None), y=alt.value(17))]
+        if not pts.empty:
+            base.append(alt.Chart(pts).mark_circle(color=color, opacity=.8, stroke="#fff", strokeWidth=.8).encode(
+                x=alt.X("date:T", scale=xs, axis=None),
+                y=alt.Y("k:N", axis=alt.Axis(labels=False, ticks=False, domain=False, title=None, minExtent=AXW, maxExtent=AXW)),
+                size=alt.Size("n:Q", legend=None, scale=alt.Scale(range=[22, 95])),
+                tooltip=[alt.Tooltip("date:T", title="Month", format="%b %Y"), alt.Tooltip("n:Q", title="Reports")]
+            ).transform_calculate(k="'x'"))
+        if not recalls.empty:
+            base.append(alt.Chart(recalls).mark_rule(color="#9ca3af", strokeDash=[2, 3]).encode(x="date:T"))
+        st.altair_chart(alt.layer(*base).properties(height=34, padding={"left": 0, "right": 10, "top": 0, "bottom": 0})
+                        .configure_view(stroke=None), width="stretch")
+
+
+def strongest_card(e: dict):
+    """Section 3, right: the strongest evidence, its three witnesses and the hand-checked confidence."""
+    x = reps.get(e["report_number"], {})
+    passage = (x.get("passage") or e.get("excerpt") or "")
+    passage = passage[:340] + "..." if len(passage) > 340 else passage
+    od = bool(x.get("witnesses", {}).get("outcome_field_says_death"))
+    filed = esc(e.get("coded_as") or e.get("event_type") or "Malfunction")
+    if od:
+        head, cap = "Three witnesses, one disagrees", ('<div class="w3cap"><div class="l">The maker\'s label</div>'
+                                                      '<div class="r">These two agree: a death</div></div>')
+        outcome = '<div class="b death">Outcome field<strong>Death</strong></div>'
+    else:
+        head, cap = "Three witnesses: only the text records the death", ""
+        outcome = '<div class="b">Outcome field<strong>Not death</strong></div>'
+    conf = ""
+    if top_band:
+        right, total = top_band["deaths"], top_band["n"]
+        conf = (f'<div class="conf"><div class="h">&#9673; Confidence</div><div class="t">Reports scored this high, checked '
+                f'by a person: <b>{right} of {total}</b> really described a death.</div>{dots(right, total)}</div>')
+    st.markdown(f"""<span class="hl">Strongest evidence</span>
+      <div class="ev-id">Report {esc(e['report_number'])} &middot; {esc(e.get('date') or e.get('date_received') or '')}</div>
+      <div class="ev-q">{marked(passage)}</div>
+      <div class="wh">{head}</div>
+      <div class="w3"><div class="b odd">Filed as<strong>{filed}</strong></div>{outcome}
+        <div class="b death">Report text<strong>Patient died</strong></div></div>{cap}
+      {conf}
+      <a class="fda" href="{esc(e.get('fda_url'))}" target="_blank">Open the FDA report &#8599;</a>""",
+                unsafe_allow_html=True)
+
+
 def evidence_card(e: dict, compact=False):
     x = reps.get(e["report_number"], {})
     passage = (x.get("passage") or e.get("excerpt") or "")
@@ -395,23 +827,86 @@ def evidence_card(e: dict, compact=False):
                 unsafe_allow_html=True)
 
 
+def why_card(e: dict):
+    """Section 4: why one report was flagged, in four numbered steps."""
+    x = reps.get(e["report_number"], {})
+    passage = x.get("passage") or e.get("excerpt") or ""
+    prob = x.get("prob") or e.get("death_prob")
+    wit = x.get("witnesses", {})
+    od = bool(wit.get("outcome_field_says_death"))
+    filed = esc(wit.get("event_type") or e.get("event_type") or e.get("coded_as") or "Malfunction")
+    denies = re.search(r"not (cause or )?contribut", passage, re.I)
+    note = ('<div class="why-note">The maker also states the device did not contribute to the outcome. '
+            'A report is an allegation, not proof.</div>' if denies else
+            '<div class="why-note">A report is an allegation, not proof.</div>')
+    outcome = ('<div class="b death">Outcome field<strong>Death</strong></div>' if od else
+               '<div class="b">Outcome field<strong>Not death</strong></div>')
+    wnote = ("The outcome field and the report text agree: a death. Only the maker's label says otherwise." if od else
+             "Only the report text says the patient died. The two coded fields do not.")
+    up, down = x.get("words_up", [])[:4], x.get("words_down", [])[:2]
+    scale = max([abs(w["weight"]) for w in up + down] + [0.01])
+    bars = '<div class="wbars"><div></div><div class="hd">Down &nbsp; | &nbsp; Up, toward "a death"</div><div></div>'
+    for w in up + down:
+        width = 86 * abs(w["weight"]) / scale
+        if w["weight"] >= 0:
+            bar = f'<span style="left:12%;width:{width:.0f}%;background:#1d4ed8"></span>'
+        else:
+            bar = f'<span style="left:{12 - min(width, 12):.0f}%;width:{min(width, 12):.0f}%;background:#9ca3af"></span>'
+        bars += (f'<div class="t">{esc(w["term"])}</div><div class="track"><span class="zero"></span>{bar}</div>'
+                 f'<div class="num{" neg" if w["weight"] < 0 else ""}">{w["weight"]:+.2f}</div>')
+    bars += "</div>"
+    sims = ""
+    for n in x.get("similar_confirmed", [])[:2]:
+        person = "person" in (n.get("source") or "").lower() or "hand" in (n.get("source") or "").lower()
+        who = ('<span class="who person">&#9673; Confirmed by a person</span>' if person else
+               '<span class="who llm">Confirmed by a large language model</span>')
+        sims += (f'<div class="sim"><div class="top"><span>Report {esc(n.get("report_number", ""))}</span>{who}</div>'
+                 f'<div class="txt">{marked(n.get("text", "")[:200])}</div></div>')
+    conf = ""
+    if top_band:
+        right, total = top_band["deaths"], top_band["n"]
+        conf = (f'<div class="conf"><div class="t">Reports scored this high, checked by a person: <b>{right} of {total}</b> '
+                f'really described a death.</div>{dots(right, total)}</div>')
+    date = esc(e.get("date_received") or e.get("date") or "")
+    st.markdown(f"""<div class="why-top"><div><span class="hl">Why this was flagged</span>
+        <div class="ev-id">Report {esc(e['report_number'])} &middot; {date} &middot; Filed as {filed}</div></div>
+        <div class="why-score"><div class="k">Model score</div><div class="v">{min(prob or 0, 0.999):.2f}</div></div></div>
+      <div class="step"><span class="n">1</span>What the report says</div>
+      <div class="ev-q">{marked(passage)}</div>{note}
+      <div class="step"><span class="n">2</span>Three witnesses</div>
+      <div class="w3"><div class="b{"" if not od else " odd"}">Filed as<strong>{filed}</strong></div>{outcome}
+        <div class="b death">Report text<strong>Patient died</strong></div></div>
+      <div class="why-note">{wnote}</div>
+      <div class="step"><span class="n">3</span>Words that moved the score</div>{bars}
+      {'<div class="step"><span class="n">4</span>Similar reports already confirmed as deaths</div>' + sims if sims else ''}
+      {conf}
+      <div class="why-actions"><a class="b1" href="{esc(e.get('fda_url'))}" target="_blank">Open the FDA report &#8599;</a>
+        <a class="b2" href="{esc(e.get('fda_api_url'))}" target="_blank">Raw data &#8599;</a></div>""",
+                unsafe_allow_html=True)
+
+
 # ---------------------------------------------------------------- Overview
 with tab_over:
     kpis()
-    st.markdown('<div class="note" style="margin:-.4rem 0 .8rem">Every number on this page opens the FDA reports behind it. '
-                'Green = counted straight from the FDA record. Blue = found by our model and checked by a person.</div>',
-                unsafe_allow_html=True)
-    left, right = st.columns([2.1, 1], gap="large")
+    st.markdown('<div class="legend"><span>Every number on this page opens the FDA reports behind it.</span>'
+                '<span><span class="sq" style="background:#1b6b3a"></span><b style="color:#1b6b3a">Green:</b> '
+                'counted straight from the FDA record.</span>'
+                '<span><span class="sq" style="background:#1d4ed8"></span><b style="color:#1d4ed8">Blue:</b> '
+                'found by our model and checked by a person.</span></div>', unsafe_allow_html=True)
+    left, right = st.columns([2.15, 1], gap="medium")
     with left:
-        st.markdown('<div class="ptitle">Reports per month · recalls in blue · ▼ unusual jump</div>', unsafe_allow_html=True)
-        timeline_chart(260, labels=False)
+        with st.container(key="chartcard"):
+            chart_card(t["deaths_coded"], hidden_n)
     with right:
-        st.markdown('<div class="ptitle">Strongest evidence</div>', unsafe_allow_html=True)
+        with st.container(key="evcard"):
+            if rec.get("evidence"):
+                strongest_card(rec["evidence"][0])
+            else:
+                st.markdown('<span class="hl">Strongest evidence</span><div class="c-sub" style="margin-top:.8rem">No deaths '
+                            'filed under another category were found for this device.</div>', unsafe_allow_html=True)
         if rec.get("evidence"):
-            evidence_card(rec["evidence"][0], compact=True)
-            st.caption(f"See all {hidden_n} in the Evidence tab.")
-        else:
-            st.caption("No deaths filed under another category were found for this device.")
+            st.markdown(f'<div style="margin:.7rem 0 0 .2rem">{tab_link("evidence", f"See all {hidden_n} in the Evidence tab &rarr;", "below")}</div>',
+                        unsafe_allow_html=True)
     st.caption("A report is an allegation, not proof the device caused harm. Do not stop using a device because of this page"
                + ("; keep an AED in service unless the manufacturer says otherwise." if d["product_code"] == "MKJ" else "."))
 
@@ -424,153 +919,286 @@ with tab_ev:
     else:
         rows = reports(rec["device_key"], "deaths_hidden") if not using_sample else rec["evidence"]
         df = pd.DataFrame(rows)
-        left, right = st.columns([1.15, 1.35], gap="large")
+        if "date_received" in df:
+            df = df.sort_values("date_received", ascending=False).reset_index(drop=True)
+        n = len(df)
+        st.markdown(f"""<div class="ev-top"><div class="ev-h"><em>{n} report{"s" if n != 1 else ""}</em> say the patient died
+            but were filed as a malfunction or injury.</div>
+            <span class="tag model" style="margin-top:1.9rem">&#9673; Our model, checked by hand</span></div>
+            <div class="ev-sub">Read them yourself. Pick a report on the left to see exactly why it was flagged.</div>""",
+                    unsafe_allow_html=True)
+
+        def phrase(text):
+            hit = DEATH_PHRASES.search(str(text or ""))
+            return f'"{hit.group(0).lower()}"' if hit else ""
+        df["phrase"] = [phrase(reps.get(r, {}).get("passage") or x)
+                        for r, x in zip(df["report_number"], df.get("excerpt", [""] * n))]
+        left, right = st.columns([1, 1.12], gap="medium")
         with left:
-            st.markdown(f'<div class="ptitle">{len(df)} reports: text says the patient died, filed as something else</div>',
-                        unsafe_allow_html=True)
-            def around(text):
-                text = str(text or "")
-                hit = DEATH_PHRASES.search(text)
-                if not hit:
-                    return text[:110]
-                a = max(0, hit.start() - 45)
-                return ("…" if a else "") + text[a:hit.end() + 60] + "…"
-            df["excerpt"] = df["excerpt"].map(around)
-            view = df[["date_received", "event_type", "death_prob", "excerpt"]].rename(columns={
-                "date_received": "Date", "event_type": "Filed as", "death_prob": "Confidence", "excerpt": "What it says"})
-            sel = st.dataframe(view, hide_index=True, width="stretch", height=520, on_select="rerun",
-                               selection_mode="single-row",
-                               column_config={"Confidence": st.column_config.ProgressColumn(format="%.2f", min_value=0, max_value=1),
-                                              "What it says": st.column_config.TextColumn(width="large")})
-            st.caption("Click a row to see why it was flagged.")
+            with st.container(key="evlist"):
+                st.markdown(f'<div class="lst-h"><span class="m">{n} reports &middot; newest first</span>'
+                            f'<span>1 selected</span></div>', unsafe_allow_html=True)
+                view = df[["date_received", "event_type", "death_prob", "phrase"]].rename(columns={
+                    "date_received": "Date", "event_type": "Filed as", "death_prob": "Model score", "phrase": "Death phrase found"})
+                sel = st.dataframe(view, hide_index=True, width="stretch", height=min(640, 38 + 35 * n), on_select="rerun",
+                                   selection_mode="single-row", key="evsel",
+                                   column_config={"Model score": st.column_config.ProgressColumn(
+                                       format="%.2f", min_value=0, max_value=1)})
+                st.download_button(f"Download all {n} as CSV", df.drop(columns=["phrase"]).to_csv(index=False),
+                                   file_name=f"rapsheet-{rec['device_key']}-filed-as-something-else.csv", mime="text/csv")
         with right:
             chosen = sel.selection.rows[0] if sel and sel.selection.rows else 0
-            evidence_card(dict(df.iloc[chosen]))
+            with st.container(key="whycard"):
+                why_card(dict(df.iloc[chosen]))
     if not using_sample:
-        with st.expander(f"All {t['deaths_coded']:,} reports filed as deaths"):
+        with st.expander(f"All {t['deaths_coded']:,} reports filed as deaths &nbsp; :green-background[✓ FDA record, no model]"):
             table(reports(rec["device_key"], "deaths_coded"), ["report_number", "date_received", "excerpt"])
-        with st.expander(f"{t.get('deaths_outcome_field') or 0} reports where the FDA's two death fields disagree"):
+        with st.expander(f"{t.get('deaths_outcome_field') or 0} reports where the FDA's two death fields disagree "
+                         f"&nbsp; :blue-background[Checked by hand]"):
             st.caption("Filed as a malfunction, but the outcome field says Death. Checked by hand, only about half "
                        "describe a death, so these are not counted above.")
             table(reports(rec["device_key"], "deaths_outcome_field"), ["report_number", "date_received", "outcomes", "excerpt"])
 
 # ---------------------------------------------------------------- Timeline
+def spike_runs(events):
+    """Join months flagged one after another into one 'reports rising' entry, so the list stays readable."""
+    runs = []
+    for e in [x for x in events if x["kind"] == "spike"]:
+        month = e["date"][:7]
+        y, m = int(month[:4]), int(month[5:7])
+        if runs and (y * 12 + m) - runs[-1]["last_idx"] <= 3:
+            runs[-1]["last_idx"], runs[-1]["last"], runs[-1]["n"] = y * 12 + m, month, runs[-1]["n"] + 1
+        else:
+            runs.append({"date": month, "last": month, "last_idx": y * 12 + m, "n": 1, "text": e["text"]})
+    return runs
+
+
 with tab_time:
-    st.markdown('<div class="ptitle">Reports per month, by how they were filed</div>', unsafe_allow_html=True)
-    timeline_chart(360)
-    st.caption("Dots: deaths per month. ▼ a month far above this device's usual level, which came before 49% of 88 "
-               "past recalls, against 36% by chance. Not a prediction.")
-    events = [e for e in rec.get("timeline", []) if e["kind"] in ("recall", "spike")]
-    if events:
-        st.dataframe(pd.DataFrame([{"Date": e["date"], "Event": "Recall" if e["kind"] == "recall" else "Reports jumped",
-                                    "Detail": e["text"]} for e in events]), hide_index=True, width="stretch",
-                     height=min(320, 40 + 35 * len(events)), column_config={"Detail": st.column_config.TextColumn(width="large")})
+    with st.container(key="chartcard2"):
+        chart_card(t["deaths_coded"], hidden_n)
+    bt = load_json("results/reports_rising_backtest.json")
+    events = rec.get("timeline", [])
+    items = []
+    for e in events:
+        if e["kind"] == "first_report":
+            items.append((e["date"], "first", "First report", "First report in our data",
+                          f"{t['reports']:,} reports in total from {rec['period']['first'][:7]} to {rec['period']['last'][:7]}.", ""))
+        elif e["kind"] == "recall":
+            is_open = "terminated" not in (e.get("status") or "").lower()
+            lead = e.get("lead_months")
+            reason = next((r["reason"] for r in rec["recalls"] if r["number"] == e.get("number")), "")
+            body = esc(reason) + (f" Reports had been rising for {lead} months before this." if lead else
+                                  " No rise in reports was flagged before it.")
+            pill = f'<span class="st {"open" if is_open else "closed"}">{"Open" if is_open else "Closed"}</span>'
+            items.append((e["date"], "recall", "Recall", f"Recall {esc(e.get('number', ''))} started {pill}", body, " box"))
+    for r in spike_runs(events):
+        more = f" Flagged in {r['n']} months, through {r['last']}." if r["n"] > 1 else ""
+        items.append((r["date"], "rising", "Reports rising", "Reports far above this device's usual level",
+                      esc(r["text"].replace("Reports rising: ", "").capitalize()) + more, ""))
+    items.sort(key=lambda x: x[0])
+    icons = {"first": "&#9634;", "rising": "&#8599;", "recall": "&#9873;"}
+    rows_html = "".join(
+        f'<div class="tl-row"><div class="tl-ic {kind}">{icons[kind]}</div>'
+        f'<div class="tl-when"><div class="d">{esc(date)}</div><div class="k">{label}</div></div>'
+        f'<div class="tl-what{box}"><div class="h">{head}</div><div class="p">{body}</div></div></div>'
+        for date, kind, label, head, body, box in items)
+    left, right = st.columns([2.2, 1], gap="medium")
+    with left:
+        st.markdown(f"""<div class="pcard"><div class="tl-top"><div class="c-title">What happened, in order</div>
+          <div class="tl-leg"><span>&#9634; First report</span><span>&#9679; Reports rising</span><span>&#9632; Recall</span></div></div>
+          <div class="tl">{rows_html}</div></div>""", unsafe_allow_html=True)
+    with right:
+        if bt:
+            a, b = bt.get("pct_recalls_with_warning", 0), bt.get("pct_control_windows_with_warning", 0)
+            st.markdown(f"""<div class="limit"><span class="hl">The honest limit</span>
+              <div class="big">A rise in reports came before {a:.0f}% of {bt.get('recall_events_testable', 0)} past recalls,
+              against {b:.0f}% by chance.</div>
+              <div class="lb"><span>Before a recall</span><div class="tr"><i style="width:{a:.0f}%;background:#1f2937"></i></div><b>{a:.0f}%</b></div>
+              <div class="lb"><span>By chance</span><div class="tr"><i style="width:{b:.0f}%;background:#9ca3af"></i></div><b>{b:.0f}%</b></div>
+              <div class="end">It is a signal to look closer, <b>not a prediction.</b></div></div>""", unsafe_allow_html=True)
+    with st.expander("See every event as a table"):
+        st.dataframe(pd.DataFrame([{"Date": e["date"], "Event": {"recall": "Recall", "spike": "Reports rising",
+                                                                 "first_report": "First report"}.get(e["kind"], e["kind"]),
+                                    "Detail": e["text"]} for e in events if e["kind"] != "hidden_death"]),
+                     hide_index=True, width="stretch", column_config={"Detail": st.column_config.TextColumn(width="large")})
 
 # ---------------------------------------------------------------- Recalls & filing
+FDA_TAG = '<span class="tag fda" style="margin-top:0">&#10003; FDA record, no model</span>'
 with tab_rec:
-    st.markdown(f'<div class="ptitle">{len(rec["recalls"])} recalls name this model</div>', unsafe_allow_html=True)
-    if rec["recalls"]:
-        cols = st.columns(min(3, len(rec["recalls"])))
-        for i, r in enumerate(rec["recalls"]):
-            lead = next((e.get("lead_months") for e in rec.get("timeline", [])
-                         if e["kind"] == "recall" and e.get("number") == r["number"]), None)
-            status = "red" if "terminated" not in (r["status"] or "").lower() else ""
-            cols[i % len(cols)].markdown(f"""<div class="rc"><div class="top"><span>{esc(r['date'])} · {esc(r['number'])}</span>
-              <span class="pill {status}">{esc(r['status'])}</span></div><div class="r">{esc(r['reason'])}</div>
-              <div class="f">{f"Reports rose {lead} months before" if lead else "No rise in reports before it"}</div></div>""",
-                                         unsafe_allow_html=True)
+    n_all, n_open = len(rec["recalls"]), len(open_recalls)
+    if n_all == 0:
+        head = "No recalls name this model."
+    elif n_open == n_all:
+        head = f"{n_all} recall{'s' if n_all != 1 else ''} name{'s' if n_all == 1 else ''} this model. " + (
+            "Both are still open." if n_all == 2 else ("It is still open." if n_all == 1 else "All are still open."))
     else:
-        st.caption("No recalls matched this model.")
-    st.write("")
-    if not using_sample:
+        head = f"{n_all} recall{'s' if n_all != 1 else ''} name{'s' if n_all == 1 else ''} this model. " + (
+            f"{n_open} still open." if n_open else "None are open now.")
+    match = rec.get("recall_match") or {}
+    rule = (f"Matched because the recall's product text names the maker (\"{esc(match.get('maker_word', ''))}\") and the "
+            f"model (\"{esc(match.get('phrase', ''))}\"). We read all {match.get('recalls_checked', 0):,} recall records for "
+            f"this device type.") if match else ""
+    st.markdown(f"""<div class="ev-top"><div class="ev-h" style="font-size:1.6rem">{head}</div>
+        <span style="margin-top:1.9rem">{FDA_TAG}</span></div><div class="ev-sub">{rule}</div>""", unsafe_allow_html=True)
+    words = [w for w in [match.get("phrase")] + (match.get("brand_words") or []) if w]
+    cards = ""
+    for r in rec["recalls"]:
+        lead = next((e.get("lead_months") for e in rec.get("timeline", [])
+                     if e["kind"] == "recall" and e.get("number") == r["number"]), None)
+        parts = [x.strip() for x in (r["status"] or "").split(",") if x.strip()]
+        is_open = "terminated" not in (r["status"] or "").lower()
+        pills = "".join(f'<span class="st {"open" if (is_open and i == 0) else "closed"}">{esc(x)}</span>'
+                        for i, x in enumerate(parts or ["Unknown"]))
+        desc = esc(" ".join((r.get("description") or "").split())[:230])
+        for w in sorted(set(words), key=len, reverse=True):
+            desc = re.sub(f"({re.escape(esc(w))})", r"<mark>\1</mark>", desc, flags=re.I)
+            break                                   # highlight the full model phrase once found
+        api = "https://api.fda.gov/device/recall.json?search=product_res_number:%22" + esc(r["number"]) + "%22"
+        cards += f"""<div class="rcard"><div class="rtop"><div class="num">{esc(r['number'])}</div><div>{pills}</div></div>
+          <div class="when">Started {esc(r['date'] or '')}</div>
+          <div class="lab2">FDA's reason</div><div class="why">{esc(r['reason'])}</div>
+          <div class="lab2">Product description</div><div class="desc2">{desc}...</div>
+          <div class="rfoot"><span>{f"Reports rose {lead} months before" if lead else "No rise in reports before it"}</span>
+            <a href="{api}" target="_blank">Open the FDA recall record</a></div></div>"""
+    if cards:
+        st.markdown(f'<div class="rgrid">{cards}</div>', unsafe_allow_html=True)
+    if not using_sample and m.get("pct_late") is not None:
         mr = pd.DataFrame(maker_reports(d["manufacturer"]))
         peers = pd.DataFrame(makers_late(d["product_code"]))
-        a, b = st.columns(2, gap="large")
-        with a:
-            st.markdown(f'<div class="ptitle">How fast {esc(maker)} reports to the FDA</div>', unsafe_allow_html=True)
-            if not mr.empty:
-                mr["days"] = mr["days_to_report"].clip(upper=180)
-                hist = alt.Chart(mr).mark_bar(color=LIGHT, cornerRadiusTopLeft=2, cornerRadiusTopRight=2).encode(
-                    x=alt.X("days:Q", bin=alt.Bin(step=5), title="Days to report (180+ grouped)"),
-                    y=alt.Y("count():Q", title="Reports"))
-                rule = alt.Chart(pd.DataFrame({"x": [30], "t": ["30-day legal deadline"]}))
-                st.altair_chart(chart_cfg(hist + rule.mark_rule(color=RED, size=2).encode(x="x:Q")
-                                          + rule.mark_text(align="left", dx=6, y=10, color=RED, fontWeight=600).encode(
-                                              x="x:Q", text="t:N"), 260), width="stretch")
-        with b:
-            st.markdown('<div class="ptitle">Share filed late, compared with other makers</div>', unsafe_allow_html=True)
-            if len(peers) > 1:
-                peers["who"] = peers["manufacturer"].map(lambda x: "This maker" if x == d["manufacturer"] else "Others")
-                peers["name"] = peers["manufacturer"].map(lambda x: " ".join(w for w in x.split() if not w.isdigit()).title()[:30])
-                st.altair_chart(chart_cfg(alt.Chart(peers.head(10)).mark_bar(cornerRadiusEnd=3).encode(
-                    x=alt.X("pct_late:Q", title="% of reports filed late"), y=alt.Y("name:N", sort="-x", title=None),
-                    color=alt.Color("who:N", legend=None, scale=alt.Scale(domain=["This maker", "Others"], range=[BLUE, LIGHT])),
-                    tooltip=["name", "n", "pct_late"]), 260), width="stretch")
+        with st.container(key="latecard"):
+            st.markdown(f"""<div class="late-top"><div class="late-h"><span class="n">{m['pct_late']:g}%</span>
+                <span class="s">of {esc(maker)}'s reports arrived after the 30-day legal deadline.</span></div>{FDA_TAG}</div>""",
+                        unsafe_allow_html=True)
+            a, b = st.columns(2, gap="large")
+            with a:
+                st.markdown(f'<div class="lab2">How fast {esc(maker)} reports</div>', unsafe_allow_html=True)
+                if not mr.empty:
+                    mr["days"] = mr["days_to_report"].clip(upper=180)
+                    mr["late"] = mr["days"] > 30
+                    hist = alt.Chart(mr).mark_bar().encode(
+                        x=alt.X("days:Q", bin=alt.Bin(step=5), title="Days from the maker learning of an event to the FDA "
+                                                                      "receiving the report (180+ grouped)"),
+                        y=alt.Y("count():Q", title=None, axis=alt.Axis(tickCount=5, gridColor="#eef0f3", domain=False, ticks=False)),
+                        color=alt.Color("late:N", legend=None, scale=alt.Scale(domain=[False, True], range=["#cdd2dc", "#1f2937"])))
+                    line = alt.Chart(pd.DataFrame({"x": [30]}))
+                    st.altair_chart((hist + line.mark_rule(color=NAVY, size=2).encode(x="x:Q")
+                                     + line.mark_text(align="left", dx=7, fontSize=12, fontWeight=700, color=NAVY).encode(
+                                         x="x:Q", y=alt.value(8), text=alt.value("30-day legal deadline"))
+                                     + line.mark_text(align="left", dx=7, fontSize=11, color="#4b5563").encode(
+                                         x="x:Q", y=alt.value(24), text=alt.value(f"Dark bars arrived late ({m['pct_late']:g}%)"))
+                                     ).properties(height=250).configure_view(stroke=None)
+                                    .configure_axis(labelFont="IBM Plex Mono", labelColor="#4b5563", titleFont="IBM Plex Sans",
+                                                    titleColor="#4b5563", titleFontWeight="normal"), width="stretch")
+            with b:
+                st.markdown(f'<div class="lab2">Share filed late, other {esc(thing_plural)} makers</div>', unsafe_allow_html=True)
+                if len(peers) > 1:
+                    peers["name"] = peers["manufacturer"].map(lambda x: " ".join(w for w in x.split() if not w.isdigit()).title()[:28])
+                    mine = peers[peers["manufacturer"] == d["manufacturer"]]
+                    show = pd.concat([peers.head(6), mine]).drop_duplicates("manufacturer").sort_values("pct_late", ascending=False)
+                    top = max(show["pct_late"].max(), 1)
+                    bars = "".join(
+                        f'<div class="pr{" me" if r_.manufacturer == d["manufacturer"] else ""}"><span>{esc(r_.name)}</span>'
+                        f'<div class="tr"><i style="width:{100 * r_.pct_late / top:.0f}%"></i></div><b>{r_.pct_late:g}%</b></div>'
+                        for r_ in show.itertuples())
+                    rank = int((peers["pct_late"] > m["pct_late"]).sum()) + 1
+                    st.markdown(f'<div class="peers">{bars}</div><div class="why-note">Lower is better. {esc(maker)} ranks '
+                                f'{rank} of {len(peers)} makers with at least 20 reports (1 = files late most often).</div>',
+                                unsafe_allow_html=True)
 
 # ---------------------------------------------------------------- Why trust this
 with tab_trust:
+    two = gold.get("two_checkers", {})
+    if clf:
+        right, total = clf["true_pos"], clf["true_pos"] + clf["false_pos"]
+        st.markdown(f"""<div class="hero"><div><div class="k">The one number to check</div>
+            <div class="h">When this site says a death was filed as something else, a person agreed
+            <em>{right} times out of {total}.</em></div>
+            <div class="p">The other {total - right} are shown below. The checkers never saw the model's answer.</div></div>
+          <div class="side"><div class="k">Checkers agreed</div><div class="v">{two.get('agreed', '–')} of {two.get('reports_both_labelled', '–')}</div>
+            <div class="p">kappa {two.get('kappa', 0):.2f}, 200 reports read blind</div></div></div>""", unsafe_allow_html=True)
     if not using_sample:
         p = provenance()
-        steps = [(f"{p['reports']:,}", "FDA reports downloaded"),
-                 ("2,122", "labelled by a large AI model"),
-                 ("1 small model", "learns from them, reads every report"),
+        steps = [(f"{p['reports']:,}", "FDA reports downloaded"), ("2,675", "labelled by a large language model"),
+                 ("1", "small model learns from them and reads every report"),
                  (f"{explain.get('meta', {}).get('flagged', '–')}", "reports flagged, each with reasons"),
                  (f"{gold.get('gold_reports_used', '–')}", "checked blind by a person")]
-        st.markdown('<div class="ptitle">How a report becomes a finding</div><div class="flow">' + "".join(
-            f'<div class="step"><div class="v">{esc(v)}</div><div class="l">{esc(l)}</div></div>' for v, l in steps)
-            + "</div>", unsafe_allow_html=True)
-        st.write("")
-        mk = gold_mistakes()
-        if mk["false_pos"]:
-            fp = mk["false_pos"][0]
-            st.markdown(f"""<div class="miss"><div class="h">Where the model was wrong, shown openly</div>
-              <div class="q">Of {len(mk["false_pos"]) + (clf.get("true_pos", 0) if clf else 0)} flags people checked,
-              {len(mk["false_pos"])} {"was" if len(mk["false_pos"]) == 1 else "were"} judged <b>not</b> a patient death. One of them:<br><i>"{marked((fp["excerpt"] or "")[:260])}…"</i></div>
-              <div class="dotlbl">It also missed {mk["missed"]} deaths that a person found. We show fewer, surer findings
-              rather than more, less certain ones. <a href="{esc(fp["fda_url"])}" target="_blank">Read this report ↗</a></div></div>""",
-                        unsafe_allow_html=True)
-            st.write("")
-    a, b = st.columns(2, gap="large")
+        st.markdown('<div class="pcard flow2">' + "".join(
+            f'<div class="fs"><div class="v">{esc(v)}</div><div class="l">{esc(l)}</div></div>' for v, l in steps) + "</div>",
+            unsafe_allow_html=True)
+    a, b = st.columns([1.25, 1], gap="medium")
     with a:
-        st.markdown('<div class="ptitle">Four ways to find hidden deaths, scored by a person</div>', unsafe_allow_html=True)
-        if gold.get("methods"):
-            names = {"death word": "Keyword search", "outcome field": "FDA outcome field", "classifier": "Our model",
-                     "large model": "Large AI model"}
-            rows = []
-            for k, label in names.items():
-                mm = gold["methods"].get(k)
-                if mm and mm.get("precision") is not None:
-                    rows += [{"method": label, "measure": "Right when it flags", "value": mm["precision"]},
-                             {"method": label, "measure": "Share of deaths found", "value": mm["recall"] or 0}]
-            st.altair_chart(chart_cfg(alt.Chart(pd.DataFrame(rows)).mark_bar(cornerRadiusEnd=3, height=12).encode(
-                y=alt.Y("method:N", sort=list(names.values()), title=None, axis=alt.Axis(labelLimit=200)),
-                yOffset=alt.YOffset("measure:N", sort=["Right when it flags", "Share of deaths found"]),
-                x=alt.X("value:Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format="%"), title=None),
-                color=alt.Color("measure:N", title=None, sort=["Right when it flags", "Share of deaths found"],
-                                scale=alt.Scale(domain=["Right when it flags", "Share of deaths found"], range=[BLUE, LIGHT]),
-                                legend=alt.Legend(orient="bottom")),
-                tooltip=["method", "measure", alt.Tooltip("value:Q", format=".0%")]), 250), width="stretch")
-            if clf:
-                st.markdown(f'<div class="trust">Our model was right <b>{clf["true_pos"]} of {clf["true_pos"] + clf["false_pos"]}</b> '
-                            f'times it flagged a death; keyword search <b>{kw.get("true_pos", 0)} of '
-                            f'{kw.get("true_pos", 0) + kw.get("false_pos", 0)}</b>. It finds fewer of the deaths, on purpose: '
-                            f'fewer, surer findings.</div>', unsafe_allow_html=True)
+        names = [("death word", "Keyword search"), ("outcome field", "FDA outcome field"), ("classifier", "Our classifier"),
+                 ("large model", "Large language model, every report")]
+        rows_m = ""
+        for k, label in names:
+            mm = gold.get("methods", {}).get(k)
+            if not mm or mm.get("precision") is None:
+                continue
+            ours = k == "classifier"
+            flagged = mm["true_pos"] + mm["false_pos"]
+            c1, c2 = ("#1d4ed8", "#7c9be0") if ours else ("#9ca3af", "#c5c9d3")
+            rows_m += (f'<div class="mrow{" ours" if ours else ""}"><div class="nm">{label}</div>'
+                       f'<div><div class="tr"><i style="width:{100 * mm["precision"]:.0f}%;background:{c1}"></i></div>'
+                       f'<div class="cap">{mm["true_pos"]} of {flagged} &middot; {mm["precision"]:.0%}</div></div>'
+                       f'<div><div class="tr"><i style="width:{100 * (mm["recall"] or 0):.0f}%;background:{c2}"></i></div>'
+                       f'<div class="cap">{(mm["recall"] or 0):.0%} of deaths</div></div></div>')
+        st.markdown(f"""<div class="pcard"><div class="lab2">Four ways to find hidden deaths &middot; same {gold.get('gold_reports_used', '')} reports</div>
+          <div class="c-title" style="font-size:1.3rem;margin:.5rem 0 1rem">As sure as the large model. Finds fewer, on purpose.</div>
+          <div class="mrow hd"><div></div><div>Right when it flags</div><div>Finds this share of deaths</div></div>{rows_m}</div>""",
+                    unsafe_allow_html=True)
     with b:
-        st.markdown('<div class="ptitle">When the model is sure, is it right?</div>', unsafe_allow_html=True)
-        if cal:
-            cdf = pd.DataFrame([{"band": f"{c['from']:.2f}–{c['to']:.2f}", "rate": c["deaths"] / c["n"] if c["n"] else 0,
-                                 "label": f"{c['deaths']} of {c['n']}", "flag": i == len(cal) - 1} for i, c in enumerate(cal)])
-            base = alt.Chart(cdf).encode(x=alt.X("band:N", title="Model confidence", sort=None, axis=alt.Axis(labelAngle=0)),
-                                         y=alt.Y("rate:Q", title="Really a death", scale=alt.Scale(domain=[0, 1.12]),
-                                                 axis=alt.Axis(format="%", tickCount=3)))
-            st.altair_chart(chart_cfg(base.mark_bar(width={"band": .55}, cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-                color=alt.condition("datum.flag", alt.value(BLUE), alt.value(LIGHT)))
-                + base.mark_text(dy=-9, fontWeight=600, color=INK).encode(text="label:N"), 250), width="stretch")
-            st.caption("Hand-checked reports in each confidence range. Only the blue range is flagged on this site.")
-    st.markdown(f'<div class="note">Source: the FDA\'s public openFDA API; nothing edited. Device names are typed by filers, '
-                f'so some reports may sit under another spelling. Rebuild everything with <code>make pull models</code>. '
-                f'<a href="{METRICS}" target="_blank">Full results and limits ↗</a></div>', unsafe_allow_html=True)
-    if not using_sample:
-        st.download_button("Download every report behind this page (CSV)",
-                           pd.DataFrame(reports(rec["device_key"], "all")).to_csv(index=False),
-                           file_name=f"rapsheet-{rec['device_key']}.csv", mime="text/csv")
+        with st.container(key="calcard"):
+            st.markdown('<div class="lab2">When the model is sure, is it right?</div>'
+                        '<div class="c-title" style="font-size:1.3rem;margin:.5rem 0 .4rem">Only the top range reaches this site.</div>',
+                        unsafe_allow_html=True)
+            if cal:
+                cdf = pd.DataFrame([{"band": f"{c['from']:.2f}-{c['to']:.2f}", "rate": c["deaths"] / c["n"] if c["n"] else 0,
+                                     "label": f"{c['deaths']} of {c['n']}", "flag": i == len(cal) - 1,
+                                     "use": "Used on this site" if i == len(cal) - 1 else "Not shown"} for i, c in enumerate(cal)])
+                base = alt.Chart(cdf).encode(x=alt.X("band:N", title=None, sort=None, axis=alt.Axis(labelAngle=0, domain=False, ticks=False)),
+                                             y=alt.Y("rate:Q", title=None, scale=alt.Scale(domain=[0, 1.12]), axis=None))
+                st.altair_chart((base.mark_bar(width={"band": .6}).encode(
+                    color=alt.condition("datum.flag", alt.value("#1d4ed8"), alt.value("#cdd2dc")))
+                    + base.mark_text(dy=-9, font="IBM Plex Mono", fontSize=12).encode(
+                        text="label:N", color=alt.condition("datum.flag", alt.value("#1d4ed8"), alt.value("#1f2937")))
+                    + base.mark_text(fontSize=11, fontWeight=600).encode(
+                        y=alt.value(238), text="use:N", color=alt.condition("datum.flag", alt.value("#1d4ed8"), alt.value("#6b7280")))
+                    ).properties(height=250, padding={"bottom": 4}).configure_view(stroke=None)
+                    .configure_axis(labelFont="IBM Plex Mono", labelColor="#4b5563"), width="stretch")
+                st.caption("Model confidence. Bar height = share that really described a death, hand-checked.")
+    a, b = st.columns([1.25, 1], gap="medium")
+    with a:
+        mk = gold_mistakes() if not using_sample else {"false_pos": [], "missed": 0}
+        if clf:
+            wrong = ""
+            for i, fp in enumerate(mk["false_pos"][:2], 1):
+                wrong += (f'<div class="wr"><div class="top"><span>Wrong flag {i} &middot; Report {esc(fp["report_number"])}</span>'
+                          f'<span class="st closed">&#10005; Not a death</span></div>'
+                          f'<div class="txt">{marked((fp["excerpt"] or "")[:300])}</div>'
+                          f'<div class="rs"><b>Why it was wrong:</b> the text mentions a death, but a person judged it does not '
+                          f'say this patient died. <a href="{esc(fp["fda_url"])}" target="_blank">Read the report</a></div></div>')
+            n_wrong = clf["false_pos"]
+            st.markdown(f"""<div class="pcard"><div class="lab2">Where the model was wrong</div>
+              <div class="c-title" style="font-size:1.3rem;margin:.5rem 0 .9rem">{n_wrong} of {clf['true_pos'] + n_wrong} flags
+              were not deaths</div>{wrong or '<div class="why-note">The wrong flags are for a device type not loaded on this copy.</div>'}
+              <div class="why-note">It also missed {clf.get('false_neg', mk['missed'])} deaths that a person found.</div></div>""",
+                        unsafe_allow_html=True)
+    with b:
+        recall_pct = f"{clf['recall']:.0%}" if clf else "under half"
+        st.markdown(f"""<div class="pcard"><div class="lab2">What this page cannot tell you</div><div class="cant">
+          <div><b>A report is an allegation.</b> It is not proof that the device caused harm.</div>
+          <div><b>Two device types only.</b> The model was trained and checked on AEDs and CPAP/BiPAP machines.</div>
+          <div><b>Brand names vary.</b> Filers type device names by hand, so some reports may sit under another spelling.</div>
+          <div><b>The model misses deaths.</b> It finds about {recall_pct} of them. It aims to be right when it flags,
+          not to find every one.</div></div></div>""", unsafe_allow_html=True)
+    with st.container(key="srccard"):
+        a, b = st.columns([1.6, 1], vertical_alignment="center")
+        a.markdown(f"""<div class="src2"><span>Data</span><div>The FDA's public openFDA API. Nothing edited.</div>
+          <span>Code</span><div><a href="https://github.com/HackathonPrinceton/rapsheet" target="_blank">github.com/HackathonPrinceton/rapsheet</a>
+          &middot; <a href="{METRICS}" target="_blank">full results and limits</a></div>
+          <span>Rebuild</span><div><code>make pull models</code> downloads and rebuilds everything.</div></div>""",
+                   unsafe_allow_html=True)
+        if not using_sample:
+            b.download_button("Download every report behind this page (CSV)",
+                              pd.DataFrame(reports(rec["device_key"], "all")).to_csv(index=False),
+                              file_name=f"rapsheet-{rec['device_key']}.csv", mime="text/csv", type="primary")
