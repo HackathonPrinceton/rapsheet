@@ -133,8 +133,14 @@ def provenance():
     return record.provenance()
 
 
+def mtime(*names) -> float:
+    """Latest change time of eval files, so cached results refresh when the files are updated."""
+    paths = [os.path.join(ROOT, "eval", n) for n in names]
+    return max([os.path.getmtime(p) for p in paths if os.path.exists(p)] or [0])
+
+
 @st.cache_data(show_spinner=False)
-def load_json(name):
+def _load_json(name, changed):
     path = os.path.join(ROOT, "eval", name)
     if not os.path.exists(path):
         return {}
@@ -142,8 +148,12 @@ def load_json(name):
         return json.load(f)
 
 
+def load_json(name):
+    return _load_json(name, mtime(name))
+
+
 @st.cache_data(show_spinner=False)
-def gold_mistakes():
+def _gold_mistakes(changed):
     """Reports where the model and the person disagreed, so the page can show them openly."""
     import csv
     from pipeline.store import connect
@@ -171,6 +181,10 @@ def gold_mistakes():
             elif r[col] == "1" and not x["hidden_death"]:
                 out["missed"] += 1
     return out
+
+
+def gold_mistakes():
+    return _gold_mistakes(mtime("gold_A.csv", "gold_B.csv"))
 
 
 def dots(right: int, total: int) -> str:
