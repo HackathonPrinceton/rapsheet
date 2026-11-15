@@ -361,6 +361,23 @@ a.b2 {{ border: 1px solid #d1d5db; color: {NAVY} !important; }}
   .tl-row {{ grid-template-columns: 2.2rem 1fr; }} .tl-what {{ grid-column: 2; }}
   .mrow {{ grid-template-columns: 1fr; gap: .5rem; }} .mrow.hd {{ display: none; }}
   .late-h .n {{ font-size: 2.6rem; }} .late-h .s {{ font-size: 1.1rem; }} }}
+.st-key-unitcard, .st-key-yearcard, .st-key-peercard {{ background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: 1.6rem 1.7rem 1.3rem; height: 100%; }}
+.viz-k {{ font-family: 'IBM Plex Mono', monospace; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: {NAVY}; }}
+.viz-h {{ font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; font-weight: 500; color: #1f2937; line-height: 1.3;
+         margin: .5rem 0 .35rem; }}
+.viz-h b {{ font-weight: 600; color: #b3261e; }}
+.viz-s {{ font-size: .95rem; color: #4b5563; line-height: 1.45; }}
+.unit {{ display: flex; flex-wrap: wrap; gap: 7px; margin: 1.2rem 0 1rem; max-width: 30rem; }}
+.unit span {{ width: 1.05rem; height: 1.05rem; border-radius: 50%; background: #3d5a9e; }}
+.unit span.m {{ background: #c0392b; }}
+.unit-leg {{ display: flex; flex-wrap: wrap; gap: .4rem 1.6rem; font-size: .95rem; color: #1f2937; }}
+.unit-leg i {{ display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; margin-right: .45rem; vertical-align: -.05rem; }}
+.unit-leg b {{ font-weight: 600; }}
+.viz-n {{ font-size: .85rem; color: #6b7280; margin-top: .9rem; line-height: 1.45; }}
+@media (max-width: 900px) {{
+  .st-key-unitcard, .st-key-yearcard, .st-key-peercard {{ padding: 1.1rem .9rem 1rem; }}
+  .viz-h {{ font-size: 1.25rem; }} .unit {{ gap: 6px; }} .unit span {{ width: .95rem; height: .95rem; }} }}
 @media (max-width: 900px) {{
   .block-container {{ padding: 1.4rem .8rem .8rem; }}
   .st-key-paper, .st-key-home {{ padding: 1.8rem 1.1rem 1rem; }}
@@ -410,6 +427,11 @@ def maker_reports(maker):
 @st.cache_data(show_spinner=False)
 def makers_late(code):
     return record.makers_late(code)
+
+
+@st.cache_data(show_spinner=False)
+def peer_devices(code):
+    return record.peer_devices(code)
 
 
 @st.cache_data(show_spinner=False)
@@ -827,6 +849,127 @@ def evidence_card(e: dict, compact=False):
                 unsafe_allow_html=True)
 
 
+C_FILED, C_MISSED = "#3d5a9e", "#c0392b"      # checked together for colour-blind separation and contrast
+FOUND_SHARE = f"{clf['recall']:.0%}" if clf else "under half"
+
+
+def unit_card():
+    """Every report that describes a patient death as one dot: filed as a death, or filed as something else."""
+    coded, missed = t["deaths_coded"], hidden_n or 0
+    total = coded + missed
+    if not total:
+        st.markdown('<div class="viz-k">Every death, one dot</div><div class="viz-h">No reports for this device '
+                    'describe a patient death.</div>', unsafe_allow_html=True)
+        return
+    if missed:
+        share = missed / total
+        frac = ("more than 1 in 2" if share > .5 else "about 1 in 2" if share > .45 else "more than 1 in 3" if share > 1 / 3
+                else "about 1 in 3" if share > .3 else "about 1 in 4" if share > .22 else "about 1 in 5" if share > .17
+                else f"{share:.0%}")
+        head = (f'Of {total} reports that describe a patient death, <b>{missed} were not filed as deaths</b>: {frac}.')
+    else:
+        head = f"All {total} reports that describe a patient death were filed as deaths."
+    cap = 400                                    # keep the grid readable for devices with very many deaths
+    scale = max(1, -(-total // cap))
+    dots_html = ('<span></span>' * round(coded / scale)) + ('<span class="m"></span>' * round(missed / scale))
+    per = "" if scale == 1 else f" Each dot stands for {scale} reports."
+    st.markdown(f"""<div class="viz-k">Every death, one dot</div><div class="viz-h">{head}</div>
+      <div class="unit" role="img" aria-label="{coded} filed as deaths, {missed} filed as something else">{dots_html}</div>
+      <div class="unit-leg"><span><i style="background:{C_FILED}"></i><b>{coded:,}</b> filed as deaths</span>
+        <span><i style="background:{C_MISSED}"></i><b>{missed:,}</b> filed as a malfunction or injury</span></div>
+      <div class="viz-n">A count of the FDA's "Death" category sees only the blue dots.{per} The red count is a floor:
+      our model finds about {FOUND_SHARE} of such reports, and is right 27 times in 29 when it flags one.
+      A report is an allegation, not proof.</div>""", unsafe_allow_html=True)
+
+
+def year_card():
+    """Deaths per year: filed as deaths, with those filed as something else stacked on top."""
+    dm = pd.DataFrame(rec["months"])
+    if dm.empty or "n_deaths_coded" not in dm:
+        st.caption("No deaths by year to show.")
+        return
+    dm["year"] = dm["month"].str[:4]
+    by = dm.groupby("year")[["n_deaths_coded", "n_deaths_hidden"]].sum().reset_index()
+    long = pd.concat([by[["year"]].assign(kind="Filed as deaths", n=by["n_deaths_coded"], o=0),
+                      by[["year"]].assign(kind="Filed as a malfunction or injury", n=by["n_deaths_hidden"], o=1)])
+    by["total"] = by["n_deaths_coded"] + by["n_deaths_hidden"]
+    worst = by.sort_values("n_deaths_hidden").tail(1).iloc[0]
+    head = (f"The missed deaths are not old news: <b>{int(worst['n_deaths_hidden'])} in {worst['year']}</b> alone."
+            if worst["n_deaths_hidden"] else "Deaths reported each year.")
+    st.markdown(f"""<div class="viz-k">Deaths per year</div><div class="viz-h">{head}</div>
+      <div class="unit-leg" style="margin:.2rem 0 .4rem"><span><i style="background:{C_FILED};border-radius:2px"></i>Filed as deaths</span>
+        <span><i style="background:{C_MISSED};border-radius:2px"></i>Filed as a malfunction or injury</span></div>""",
+                unsafe_allow_html=True)
+    x = alt.X("year:O", title=None, axis=alt.Axis(labelAngle=0, domain=False, ticks=False, labelFontSize=12, labelPadding=8))
+    bars = alt.Chart(long).mark_bar(size=34, stroke="#fff", strokeWidth=1.5, cornerRadiusTopLeft=2, cornerRadiusTopRight=2).encode(
+        x=x, y=alt.Y("n:Q", title=None, axis=alt.Axis(tickCount=4, gridColor="#eef0f3", domain=False, ticks=False, labelColor="#6b7280")),
+        color=alt.Color("kind:N", legend=None, scale=alt.Scale(domain=["Filed as deaths", "Filed as a malfunction or injury"],
+                                                               range=[C_FILED, C_MISSED])),
+        order=alt.Order("o:Q"),
+        tooltip=[alt.Tooltip("year:O", title="Year"), alt.Tooltip("kind:N", title="How it was filed"),
+                 alt.Tooltip("n:Q", title="Reports describing a death")])
+    labels = alt.Chart(by).mark_text(dy=-8, fontSize=12, fontWeight=600, color="#1f2937").encode(
+        x=x, y="total:Q", text="total:Q")
+    layers = [bars, labels]
+    rc = pd.DataFrame([{"year": r_["date"][:4], "t": "Recall"} for r_ in rec["recalls"]
+                       if r_.get("date") and r_["date"][:4] in set(by["year"])]).drop_duplicates()
+    if not rc.empty:
+        layers.append(alt.Chart(rc).mark_text(fontSize=11, fontWeight=700, color=NAVY, dy=14).encode(
+            x=x, y=alt.value(248), text=alt.value("\u2691 Recall")))
+    st.altair_chart(alt.layer(*layers).properties(height=250, padding={"bottom": 18, "top": 14}).configure_view(stroke=None)
+                    .configure_axis(labelFont="IBM Plex Sans"), width="stretch")
+    st.markdown('<div class="viz-n">Each bar counts reports that describe a patient death, by the year the FDA received '
+                'them. The number on top is the total. A flag marks a year in which a recall started.</div>',
+                unsafe_allow_html=True)
+
+
+def peer_card():
+    """This device among every other device of its type."""
+    peers = pd.DataFrame(peer_devices(d["product_code"]))
+    if peers.empty or len(peers) < 5:
+        st.caption("Not enough devices of this type to compare.")
+        return
+    peers["me"] = peers["device_key"] == rec["device_key"]
+    peers["name"] = peers["brand"].str.slice(0, 40)
+    peers.loc[peers["me"], "name"] = d["brand"]            # the name shown in the page title, not the raw FDA spelling
+    peers["maker"] = peers["manufacturer"].map(lambda x_: " ".join(w for w in x_.split() if not w.isdigit()).title())
+    mine = peers[peers["me"]]
+    kind_word = {"MKJ": "defibrillators", "BZD": "CPAP and BiPAP machines"}.get(d["product_code"], "devices of its type")
+    if not mine.empty and mine.iloc[0]["hidden"]:
+        rank = int((peers["hidden"] > mine.iloc[0]["hidden"]).sum()) + 1
+        head = (f"Among {len(peers)} {kind_word}, this one has the <b>{'most' if rank == 1 else f'{rank}{chr(39)}th most' if rank > 3 else ['', '', '2nd most', '3rd most'][rank]}"
+                f"</b> deaths filed as something else.")
+    else:
+        head = f"How this device compares with {len(peers) - 1} other {kind_word}."
+    st.markdown(f"""<div class="viz-k">This device among its peers</div><div class="viz-h">{head}</div>
+      <div class="viz-s">Each dot is one device model. Further right = more FDA reports. Higher = more reports that describe
+      a death but were filed as something else.</div>""", unsafe_allow_html=True)
+    xs = alt.X("n:Q", scale=alt.Scale(type="log"), title="Total FDA reports (each step is 10 times more)",
+               axis=alt.Axis(gridColor="#eef0f3", domain=False, ticks=False, tickCount=4, labelColor="#6b7280", titleColor="#4b5563",
+                             titleFontWeight="normal", titlePadding=10))
+    ys = alt.Y("hidden:Q", title="Deaths filed as something else",
+               axis=alt.Axis(gridColor="#eef0f3", domain=False, ticks=False, tickCount=5, labelColor="#6b7280", titleColor="#4b5563",
+                             titleFontWeight="normal", titlePadding=10))
+    tip = [alt.Tooltip("name:N", title="Device"), alt.Tooltip("maker:N", title="Maker"), alt.Tooltip("n:Q", title="Reports", format=","),
+           alt.Tooltip("coded:Q", title="Filed as deaths"), alt.Tooltip("hidden:Q", title="Filed as something else")]
+    others = alt.Chart(peers[~peers["me"]]).mark_circle(size=90, color="#9aa3b5", opacity=.75, stroke="#fff", strokeWidth=1.5).encode(
+        x=xs, y=ys, tooltip=tip)
+    layers = [others]
+    if not mine.empty:
+        layers += [alt.Chart(mine).mark_circle(size=230, color=C_MISSED, stroke="#fff", strokeWidth=2).encode(x=xs, y=ys, tooltip=tip),
+                   alt.Chart(mine).mark_text(align="right", dx=-14, dy=-2, fontSize=12.5, fontWeight=700, color="#1f2937").encode(
+                       x=xs, y=ys, text="name:N")]
+    top = peers[~peers["me"]].sort_values("hidden").tail(2)
+    top = top[top["hidden"] > 0]
+    if not top.empty:
+        layers.append(alt.Chart(top).mark_text(align="right", dx=-10, dy=-2, fontSize=11, color="#4b5563").encode(
+            x=xs, y=ys, text="name:N"))
+    st.altair_chart(alt.layer(*layers).properties(height=320).configure_view(stroke=None)
+                    .configure_axis(labelFont="IBM Plex Sans", titleFont="IBM Plex Sans"), width="stretch")
+    st.markdown('<div class="viz-n">Device models with at least 50 reports. More reports can simply mean more units in use, '
+                'so this shows where to look, not which device is worse. Hover a dot for its name.</div>', unsafe_allow_html=True)
+
+
 def why_card(e: dict):
     """Section 4: why one report was flagged, in four numbered steps."""
     x = reps.get(e["report_number"], {})
@@ -893,10 +1036,25 @@ with tab_over:
                 'counted straight from the FDA record.</span>'
                 '<span><span class="sq" style="background:#1d4ed8"></span><b style="color:#1d4ed8">Blue:</b> '
                 'found by our model and checked by a person.</span></div>', unsafe_allow_html=True)
-    left, right = st.columns([2.15, 1], gap="medium")
+    if not using_sample:
+        left, right = st.columns([1, 1.15], gap="medium")
+        with left:
+            with st.container(key="unitcard"):
+                unit_card()
+        with right:
+            with st.container(key="yearcard"):
+                year_card()
+        st.write("")
+    left, right = st.columns([1.55, 1], gap="medium")
     with left:
-        with st.container(key="chartcard"):
-            chart_card(t["deaths_coded"], hidden_n)
+        if using_sample:
+            with st.container(key="chartcard"):
+                chart_card(t["deaths_coded"], hidden_n)
+        else:
+            with st.container(key="peercard"):
+                peer_card()
+            st.markdown(f'<div style="margin:.7rem 0 0 .2rem">{tab_link("timeline", "See reports month by month in the Timeline tab &rarr;", "below")}</div>',
+                        unsafe_allow_html=True)
     with right:
         with st.container(key="evcard"):
             if rec.get("evidence"):

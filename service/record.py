@@ -199,6 +199,15 @@ def makers_late(product_code: str, min_reports: int = 20) -> list[dict]:
         "GROUP BY manufacturer HAVING n >= ? ORDER BY pct_late DESC", (product_code, min_reports))]
 
 
+def peer_devices(product_code: str, min_reports: int = 50) -> list[dict]:
+    """Every device family of this type: total reports, deaths filed as deaths, deaths filed as something else."""
+    return [dict(x) for x in connect().execute(
+        "SELECT device_key, MAX(brand) brand, MAX(manufacturer) manufacturer, COUNT(*) n, "
+        "SUM(event_type='Death') coded, SUM(COALESCE(hidden_death,0)) hidden "
+        "FROM reports WHERE product_code=? AND brand != '' AND device_key NOT LIKE '%--unknown%' "
+        "AND device_key NOT LIKE 'unknown--%' GROUP BY device_key HAVING n >= ?", (product_code, min_reports))]
+
+
 def months_by_type(device_key: str) -> list[dict]:
     return [dict(r) for r in connect().execute(
         "SELECT substr(date_received,1,7) month, COALESCE(NULLIF(event_type,''),'Not given') event_type, COUNT(*) n "
