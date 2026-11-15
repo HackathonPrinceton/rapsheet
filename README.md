@@ -1,5 +1,7 @@
 <h1><img src="assets/logo.svg" alt="" width="44" align="top">&nbsp;Rap Sheet</h1>
 
+*The safety record of the device you depend on.*
+
 **Text a photo of an AED or CPAP machine label. Get back its FDA safety record, with every number traceable to the original report.**
 
 Rap Sheet turns the FDA's public adverse event and recall data into a plain-language record for one device: recalls, deaths, deaths filed under the wrong category, how late the manufacturer reports problems, and whether reports are rising. It answers by text message and links to a device page where every figure opens the FDA records it was counted from.
