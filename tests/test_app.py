@@ -40,3 +40,15 @@ def test_ask_page_off_by_default_shows_saved_investigations(monkeypatch):
     at.run()
     assert not at.exception
     assert not at.button                                   # no way to start a paid run
+
+
+@needs_data
+def test_patient_page_has_three_tabs_and_plain_answers():
+    from streamlit.testing.v1 import AppTest
+    for key, expect in ((DEMO, "recalls are open"), ("respironics--dreamstation-auto-cpap", "less reliable for CPAP")):
+        at = AppTest.from_file("../page/patient.py", default_timeout=240)
+        at.query_params["d"] = key
+        at.run()
+        assert not at.exception
+        assert len(at.tabs) == 3
+        assert any(expect in m.value for m in at.markdown)
