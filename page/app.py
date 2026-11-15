@@ -924,16 +924,16 @@ def unit_card():
     total = coded + missed
     if not total:
         st.markdown('<div class="viz-k">Every death, one dot</div><div class="viz-h">No reports for this device '
-                    'describe a patient death.</div>', unsafe_allow_html=True)
+                    'involve a patient death.</div>', unsafe_allow_html=True)
         return
     if missed:
         share = missed / total
         frac = ("more than 1 in 2" if share > .5 else "about 1 in 2" if share > .45 else "more than 1 in 3" if share > 1 / 3
                 else "about 1 in 3" if share > .3 else "about 1 in 4" if share > .22 else "about 1 in 5" if share > .17
                 else f"{share:.0%}")
-        head = (f'Of {total} reports that describe a patient death, <b>{missed} were not filed as deaths</b>: {frac}.')
+        head = (f'Of {total} reports that involve a patient death, <b>{missed} were not filed as deaths</b>: {frac}.')
     else:
-        head = f"All {total} reports that describe a patient death were filed as deaths."
+        head = f"All {total} reports that involve a patient death were filed as deaths."
     cap = 400                                    # keep the grid readable for devices with very many deaths
     scale = max(1, -(-total // cap))
     dots_html = ('<span></span>' * round(coded / scale)) + ('<span class="m"></span>' * round(missed / scale))
@@ -959,8 +959,14 @@ def year_card():
                       by[["year"]].assign(kind="Filed as a malfunction or injury", n=by["n_deaths_hidden"], o=1)])
     by["total"] = by["n_deaths_coded"] + by["n_deaths_hidden"]
     worst = by.sort_values("n_deaths_hidden").tail(1).iloc[0]
-    head = (f"The missed deaths are not old news: <b>{int(worst['n_deaths_hidden'])} in {worst['year']}</b> alone."
-            if worst["n_deaths_hidden"] else "Deaths reported each year.")
+    full = by.sort_values("year")
+    if rec["period"]["last"][5:7] != "12":                 # the newest year is not finished: compare full years only
+        full = full[full["year"] < rec["period"]["last"][:4]]
+    last2 = full.tail(2)
+    recent, all_missed = int(last2["n_deaths_hidden"].sum()), int(by["n_deaths_hidden"].sum())
+    head = (f"These are not old news: <b>{recent} of the {all_missed}</b> filed as something else arrived in "
+            f"{' and '.join(last2['year'])}." if all_missed and recent else
+            ("Deaths reported each year." if not all_missed else "When the deaths were reported."))
     st.markdown(f"""<div class="viz-k">Deaths per year</div><div class="viz-h">{head}</div>
       <div class="unit-leg" style="margin:.2rem 0 .4rem"><span><i style="background:{C_FILED};border-radius:2px"></i>Filed as deaths</span>
         <span><i style="background:{C_MISSED};border-radius:2px"></i>Filed as a malfunction or injury</span></div>""",
@@ -983,7 +989,7 @@ def year_card():
             x=x, y=alt.value(248), text=alt.value("\u2691 Recall")))
     st.altair_chart(alt.layer(*layers).properties(height=250, padding={"bottom": 18, "top": 14}).configure_view(stroke=None)
                     .configure_axis(labelFont="IBM Plex Sans"), width="stretch")
-    st.markdown('<div class="viz-n">Each bar counts reports that describe a patient death, by the year the FDA received '
+    st.markdown('<div class="viz-n">Each bar counts reports that involve a patient death, by the year the FDA received '
                 'them. The number on top is the total. A flag marks a year in which a recall started.</div>',
                 unsafe_allow_html=True)
 

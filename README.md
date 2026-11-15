@@ -1,6 +1,6 @@
 <h1><img src="assets/logo.svg" alt="" width="44" align="top">&nbsp;Rap Sheet</h1>
 
-**Text a photo of any medical device label. Get back its FDA safety record, with every number traceable to the original report.**
+**Text a photo of an AED or CPAP machine label. Get back its FDA safety record, with every number traceable to the original report.**
 
 Rap Sheet turns the FDA's public adverse event and recall data into a plain-language record for one device: recalls, deaths, deaths filed under the wrong category, how late the manufacturer reports problems, and whether reports are rising. It answers by text message and links to a device page where every figure opens the FDA records it was counted from.
 
@@ -41,7 +41,7 @@ All figures are measured on public openFDA data: 420,167 adverse event reports f
 | Agreement between the two human checkers | 27 of 30 shared reports, Cohen's kappa **0.78** |
 | Keyword search for death words, precision | 0.44 |
 | FDA patient-outcome field says "Death", precision | 0.50 |
-| LIFEPAK CR2 defibrillator: reports that describe a patient death but were not filed as deaths | **29 of 77** (more than 1 in 3); 8 of them in 2025 alone |
+| LIFEPAK CR2 defibrillator: reports that involve a patient death but were not filed as deaths | **29 of 77** (more than 1 in 3); 16 of the 29 arrived in 2024 and 2025 |
 | Manufacturer reports filed within the 30-day legal deadline | 68.9% for 2019 to 2022; 54.4% across all years (includes follow-up reports, which overstates lateness) |
 | Recalls preceded by a "reports rising" flag in the prior 24 months | 48.9%, against 35.8% for random windows |
 
@@ -51,7 +51,7 @@ The classifier trades recall for precision deliberately: a wrong "hidden death" 
 
 ## Who it is for
 
-**People who own or rely on a device.** The gym manager with an AED on the wall, or someone with a CPAP machine at home. They text a photo and learn in seconds whether the device has an open recall, what to ask the manufacturer, and they can ask to be alerted if that changes. Nobody tells them today: public-access AEDs are not registered to their owners.
+**People who own or rely on a device.** The gym manager with an AED on the wall, or someone with a CPAP machine at home. They text a photo and learn in seconds whether the device has an open recall, what to ask the manufacturer, and they can ask to be alerted if that changes. Often nobody tells them today: public-access AEDs frequently are not registered to the people responsible for them.
 
 **People who investigate.** Journalists, regulators and hospital buyers. They open the same record and see what the official death count misses, a timeline of reports and recalls, how the device compares with every other model of its type, and the evidence behind each flag. The Rap Sheet Investigator answers their questions with a case file in which every claim cites an FDA report.
 
@@ -61,7 +61,7 @@ The classifier trades recall for precision deliberately: a wrong "hidden death" 
 
 - **Deaths are filed under the wrong category.** A published review of the FDA's device database estimated that about 17% of reports in which the patient died were filed as "injury", "malfunction", "other" or left blank instead of "death" [1]. Anyone who counts only the FDA's "Death" field never sees them.
 - **Manufacturers report late.** Federal rules give manufacturers 30 days to report a death or serious injury [3], and published work finds a large share of reports arrive after that deadline [2].
-- **Owners are not told.** Public-access AEDs are not registered to the people who own them, so a gym or school is often the last to hear about a recall.
+- **Owners are often not told.** Public-access AEDs frequently are not registered to the people responsible for them, so a gym or school is often the last to hear about a recall.
 
 The data to see all of this is public. It is just not readable by the people who rely on these devices.
 
@@ -117,7 +117,7 @@ Reply MORE, SAVE or STOP.
 | Recalls & filing | Each recall with the words that matched it to the device, and how late the maker files compared with other makers |
 | Why trust this | How the numbers were checked by hand, the methods compared, and the model's known errors and limits |
 
-Any tab can be linked directly, for example `?d=<device_key>&tab=evidence`. For the LIFEPAK CR2, 29 of the 77 reports that describe a patient death were not filed as deaths, and 8 of those arrived in 2025 alone.
+Any tab can be linked directly, for example `?d=<device_key>&tab=evidence`. For the LIFEPAK CR2, 29 of the 77 reports that involve a patient death were not filed as deaths, and 16 of those 29 arrived in 2024 and 2025.
 
 ---
 
@@ -182,13 +182,13 @@ python -m agent.investigator "Which AEDs have the most deaths filed as malfuncti
 
 Every number on the page can be checked by the person reading it.
 
-- **Better than a keyword search.** On the same hand-checked reports, searching for death words gives 134 hits and 75 are wrong ("the battery was dead", "the pads expired"). The classifier flags 29 and is wrong on 2.
+- **Better than a keyword search.** On the same hand-checked reports, searching for death words gives 134 hits and 75 are wrong ("the battery was dead", "the pads expired"). On the same set, the classifier flagged 29 and was wrong on 2.
 - **Every figure has its source rows.** The Evidence tab lists the exact reports behind each headline number, each linked to the FDA's report page and to the raw openFDA record. The full set can be downloaded as CSV.
 - **Every flag is explained.** For each hidden-death flag, [`pipeline/explain.py`](pipeline/explain.py) records the passage the model scored highest, the words that pushed the score up or down (exact contributions, since the model is linear), and the most similar confirmed reports, marked as confirmed by a person or by a large language model.
 - **Three witnesses.** For each report, the FDA's event type, its patient-outcome field and the narrative text are shown side by side, with disagreements highlighted.
 - **Confidence means something.** Scores are calibrated against hand-checked reports, so "high confidence" reads as "right N times out of M".
 - **Text messages carry their reasons.** A hidden-death claim quotes one report's sentence and report number, so it can be verified from the phone.
-- **Reproducible and light on compute.** One command rebuilds everything from the public API. The classifier runs on a laptop CPU with no per-report cost, and the full dataset ships as an 11 MB file.
+- **Reproducible and light on compute.** One command rebuilds everything from the public API. The classifier runs on a laptop CPU with no per-report cost, and the full dataset ships as an 31 MB file.
 - **Public data only.** No patient identities. The hosted copy of the data contains no user data.
 - **Methods are stated, not hidden.** The page lists how each number was produced and what it cannot show.
 
