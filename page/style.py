@@ -413,7 +413,7 @@ def patient_css() -> str:
 .p-recall .top {{ display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace;
                  font-size: .72rem; letter-spacing: .08em; color: #4b5563; }}
 .p-recall .open {{ color: {CLIP}; font-weight: 600; font-family: 'IBM Plex Sans', sans-serif; font-size: .8rem; letter-spacing: 0; }}
-.p-recall .r {{ font-size: 1.02rem; font-weight: 600; margin: .5rem 0 0; line-height: 1.35; }}
+.p-recall .r {{ font-size: 1rem; font-weight: 500; margin: .25rem 0 0; line-height: 1.45; }}
 .p-recall a {{ display: block; margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed #d1d5db;
               font-size: .9rem; font-weight: 600; color: {NAVY}; text-decoration: none; }}
 .p-deaths {{ border: 1px solid #c7d2fe; background: #f5f7ff; border-radius: 12px; padding: .9rem 1rem; }}
@@ -426,6 +426,15 @@ def patient_css() -> str:
 .p-trust .d span {{ width: 8px; height: 8px; border-radius: 50%; background: #1d4ed8; }}
 .p-trust .d span.x {{ background: #fff; box-shadow: inset 0 0 0 1.5px #1d4ed8; }}
 .p-small {{ font-size: .82rem; color: #4b5563; margin-top: .5rem; }}
+.p-explain {{ font-size: 1rem; line-height: 1.55; margin: .6rem 0; color: #1f2937; }}
+.p-term {{ background: #fdecea; color: {CLIP}; font-weight: 700; padding: 0 .3rem; border-radius: 4px; }}
+.p-recall .lbl {{ font-family: 'IBM Plex Mono', monospace; font-size: .68rem; letter-spacing: .08em;
+                 text-transform: uppercase; color: #4b5563; margin-top: .6rem; }}
+.p-recall .num {{ margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed #d1d5db; font-size: .92rem; color: {NAVY}; }}
+.st-key-home {{ padding: 1.6rem 1.4rem !important; }}
+.p-notfound {{ background: #fff7ed; border: 1px solid #fed7aa; color: #7c2d12; border-radius: 10px;
+              padding: .75rem .9rem; font-size: .95rem; line-height: 1.45; margin-top: .4rem; }}
+.st-key-home .stButton button {{ justify-content: flex-start; text-align: left; border-radius: 10px; }}
 /* Three short tabs: always side by side, sharing the width, even on a phone. */
 .st-key-paper [role="tab"] {{ flex: 1 1 0 !important; min-width: 0 !important; padding: 0 .3rem !important; }}
 .st-key-paper [role="tab"] p {{ font-size: .95rem !important; white-space: nowrap; }}
