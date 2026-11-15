@@ -15,7 +15,7 @@ _DEATH = re.compile(r"(died|death|deceased|expired|passed away|did not survive|n
 
 def death_quote(excerpt: str, limit: int = 110) -> str | None:
     """The shortest sentence in an excerpt that says the patient died, in plain case: the reason for a claim."""
-    sentences = [x.strip(" .\\\"'") for x in re.split(r"(?<=[.;])\s+|\+", excerpt or "")]
+    sentences = [x.strip(" .\\\"'") for x in re.split(r"(?<=[.;])\s+|\\+", excerpt or "")]
     hits = sorted((x for x in sentences if _DEATH.search(x) and len(x) > 12), key=len)
     if not hits:
         return None
