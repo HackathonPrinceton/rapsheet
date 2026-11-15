@@ -1,8 +1,12 @@
+<p align="center"><img src="assets/logo.svg" alt="Rap Sheet logo" width="96"></p>
+
 # Rap Sheet
 
 **Text a photo of any medical device label. Get back its FDA safety record, with every number traceable to the original report.**
 
 Rap Sheet turns the FDA's public adverse event and recall data into a plain-language record for one device: recalls, deaths, deaths filed under the wrong category, how late the manufacturer reports problems, and whether reports are rising. It answers by text message and links to a device page where every figure opens the FDA records it was counted from.
+
+**Why the name.** A rap sheet is the record a person carries of every time they were reported or charged. Medical devices have one too: the FDA's file of every problem ever reported about them. As with a person's record, an entry is an allegation, not a verdict, which is why every number here links to the report behind it.
 
 Built at HackPrinceton Fall 2026 · Healthcare track
 
