@@ -1,6 +1,4 @@
-<p align="center"><img src="assets/logo.svg" alt="Rap Sheet logo" width="96"></p>
-
-# Rap Sheet
+<h1><img src="assets/logo.svg" alt="" width="44" align="top">&nbsp;Rap Sheet</h1>
 
 **Text a photo of any medical device label. Get back its FDA safety record, with every number traceable to the original report.**
 

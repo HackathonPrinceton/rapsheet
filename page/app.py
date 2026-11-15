@@ -4,6 +4,7 @@ A full-width dashboard with five tabs: Overview, Evidence, Timeline, Recalls & f
 Every number opens the FDA reports behind it, and every model flag says why it was raised.
 Explanations are precomputed by pipeline/explain.py, so the page loads no model.
 """
+import base64
 import html
 import json
 import os
@@ -25,7 +26,10 @@ LINKS = {"fda_url": st.column_config.LinkColumn("FDA page", display_text="open â
          "fda_api_url": st.column_config.LinkColumn("Raw", display_text="json")}
 DEATH_PHRASES = STATES_DEATH          # shared with the pipeline (pipeline/deathwords.py)
 
-st.set_page_config(page_title="Rap Sheet", page_icon="â—‰", layout="wide")
+ASSETS = os.path.join(os.path.dirname(__file__), "..", "assets")
+with open(os.path.join(ASSETS, "logo.svg"), "rb") as _f:
+    LOGO = "data:image/svg+xml;base64," + base64.b64encode(_f.read()).decode()
+st.set_page_config(page_title="Rap Sheet", page_icon=os.path.join(ASSETS, "logo.png"), layout="wide")
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -217,7 +221,8 @@ def chart_cfg(c, height):
 using_sample = not has_data()
 key = st.query_params.get("d")
 c_logo, c_search, c_pick = st.columns([1.1, 2.4, 2.5])
-c_logo.markdown('<div class="logo"><span class="dot"></span>Rap Sheet</div>', unsafe_allow_html=True)
+c_logo.markdown(f'<div class="logo"><img src="{LOGO}" alt="" style="height:1.9rem;vertical-align:-0.5rem;'
+                f'margin-right:.5rem">Rap Sheet</div>', unsafe_allow_html=True)
 q = c_search.text_input("Search a device", placeholder="Search a device: LIFEPAK CR2, HeartStart FRx, DreamStation",
                         label_visibility="collapsed")
 if q and not using_sample:
