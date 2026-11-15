@@ -6,6 +6,8 @@ Rap Sheet turns the FDA's public adverse event and recall data into a plain-lang
 
 **Live demo:** [54-172-47-121.sslip.io](https://54-172-47-121.sslip.io) · example: [LIFEPAK CR2 defibrillator](https://54-172-47-121.sslip.io/?d=physio--lifepak-cr2-defibrillator)
 
+![The device page for the LIFEPAK CR2 defibrillator: the record header, four facts and the four headline numbers](docs/screenshots/device-page.png)
+
 **Why the name.** A rap sheet is the record a person carries of every time they were reported or charged. Medical devices have one too: the FDA's file of every problem ever reported about them. As with a person's record, an entry is an allegation, not a verdict, which is why every number here links to the report behind it.
 
 Built at HackPrinceton Fall 2026 · Healthcare track · Special tracks: Arlequin AI (AI-Driven Forensics), Photon, ChatOverflow
@@ -223,6 +225,8 @@ cp .env.example .env
 | `ANTHROPIC_API_KEY` | Vision model access for reading label photos |
 | `RAPSHEET_VISION_MODEL` | Name of the vision model that reads label photos |
 | `LABEL_MODEL` | Name of the model used to label training data (needed only to relabel) |
+| `AGENT_MODEL` | Name of the model the Investigator uses (needed only for live questions) |
+| `ENABLE_ASK` | `1` allows live Investigator questions; `0` (default) shows saved investigations only |
 | `PAGE_BASE_URL` | Public address of the device page that bot replies link to |
 
 ### Build the data
@@ -291,6 +295,9 @@ rapsheet/
 │   ├── warning.py        reports-rising flags and recall backtest
 │   ├── timeline.py       dated history per device
 │   ├── match.py          shared recall-to-device rule
+│   ├── deathwords.py     shared death-word lists (keyword baseline, quoting, highlighting)
+│   ├── paths.py          where every evaluation file lives
+│   ├── make_demo_db.py   build the compact database the hosted page uses
 │   └── import_scores.py  load scores computed on another machine
 ├── service/            device records
 │   ├── record.py         build one device's record and its audit views
@@ -309,7 +316,9 @@ rapsheet/
 │   └── gold_check.py     blind hand-labelling tool for the hand-check set
 ├── eval/               results, the blind hand-check and training labels (see eval/README.md)
 ├── tests/              unit and end-to-end tests
-├── data/               local database (not committed) and a sample record
+├── data/               compact demo database, a sample record; the full database is local and not committed
+├── assets/             logo
+├── docs/               screenshots
 └── start_demo.py       one command for a full demo
 ```
 

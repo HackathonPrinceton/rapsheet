@@ -1001,20 +1001,22 @@ def peer_card():
         st.caption("Not enough devices of this type to compare.")
         return
     peers["me"] = peers["device_key"] == rec["device_key"]
-    peers["name"] = peers["brand"].str.slice(0, 40)
+    peers["name"] = (peers["brand"].str.replace(r"\((r|tm|c)\)|[®™©=]", "", regex=True, case=False)
+                     .str.replace(r"\s+", " ", regex=True).str.strip().str.slice(0, 40))
     peers.loc[peers["me"], "name"] = d["brand"]            # the name shown in the page title, not the raw FDA spelling
     peers["maker"] = peers["manufacturer"].map(lambda x_: " ".join(w for w in x_.split() if not w.isdigit()).title())
     mine = peers[peers["me"]]
     kind_word = {"MKJ": "defibrillators", "BZD": "CPAP and BiPAP machines"}.get(d["product_code"], "devices of its type")
     if not mine.empty and mine.iloc[0]["hidden"]:
-        rank = int((peers["hidden"] > mine.iloc[0]["hidden"]).sum()) + 1
-        head = (f"Among {len(peers)} {kind_word}, this one has the <b>{'most' if rank == 1 else f'{rank}{chr(39)}th most' if rank > 3 else ['', '', '2nd most', '3rd most'][rank]}"
-                f"</b> deaths filed as something else.")
+        # No rank: filers spell names differently, so one model can be several dots. A count of zeros is robust.
+        none = int((peers["hidden"] == 0).sum())
+        head = (f"{none} of {len(peers)} {kind_word} show no deaths filed as something else. "
+                f"This one shows <b>{int(mine.iloc[0]['hidden'])}</b>.")
     else:
         head = f"How this device compares with {len(peers) - 1} other {kind_word}."
     st.markdown(f"""<div class="viz-k">This device among its peers</div><div class="viz-h">{head}</div>
-      <div class="viz-s">Each dot is one device model. Further right = more FDA reports. Higher = more reports that describe
-      a death but were filed as something else.</div>""", unsafe_allow_html=True)
+      <div class="viz-s">Each dot is one device name as filed with the FDA. Further right = more FDA reports. Higher = more
+      reports that involve a death but were filed as something else.</div>""", unsafe_allow_html=True)
     xs = alt.X("n:Q", scale=alt.Scale(type="log"), title="Total FDA reports (each step is 10 times more)",
                axis=alt.Axis(gridColor="#eef0f3", domain=False, ticks=False, tickCount=4, labelColor="#6b7280", titleColor="#4b5563",
                              titleFontWeight="normal", titlePadding=10))
@@ -1037,7 +1039,8 @@ def peer_card():
             x=xs, y=ys, text="name:N"))
     st.altair_chart(alt.layer(*layers).properties(height=320).configure_view(stroke=None)
                     .configure_axis(labelFont="IBM Plex Sans", titleFont="IBM Plex Sans"), width="stretch")
-    st.markdown('<div class="viz-n">Device models with at least 50 reports. More reports can simply mean more units in use, '
+    st.markdown('<div class="viz-n">Device names with at least 50 reports. Filers spell names differently, so one model can appear as more than one dot. '
+                'More reports can simply mean more units in use, '
                 'so this shows where to look, not which device is worse. Hover a dot for its name.</div>', unsafe_allow_html=True)
 
 
