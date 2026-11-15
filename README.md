@@ -140,6 +140,22 @@ A month is flagged when a device's report count is far above its own previous 12
 
 ---
 
+### Rap Sheet Investigator
+
+For investigators, reporters and regulators: ask a safety question in plain words, and a deep agent built with LangChain `deepagents` answers with a cited case file.
+
+1. It plans the work as a to-do list.
+2. It searches the 420,167 FDA reports through read-only tools: find devices, read a device record, list flagged reports with their explanations, read a report's full text, recalls and maker lateness.
+3. An evidence-checker subagent re-reads every report the agent plans to cite.
+4. It writes a short case file in which every claim links to an FDA report. Plain code then confirms that each cited report exists and states what is claimed.
+
+```bash
+streamlit run page/ask.py                      # saved investigations; set ENABLE_ASK=1 for live questions
+python -m agent.investigator "Which AEDs have the most deaths filed as malfunctions?"
+```
+
+---
+
 ## Trust and auditability
 
 Every number on the page can be checked by the person reading it.
@@ -257,9 +273,11 @@ rapsheet/
 │   ├── replies.py        every message the bot sends
 │   ├── watch.py          watch list
 │   └── alerts.py         recall and reports-rising alerts
+├── agent/              Rap Sheet Investigator (LangChain deepagents): tools, agent, saved examples
 ├── page/
 │   ├── app.py            device page
-│   └── gold_check.py     blind hand-labelling tool for the gold set
+│   ├── ask.py            Investigator page
+│   └── gold_check.py     blind hand-labelling tool for the hand-check set
 ├── eval/               results, the blind hand-check and training labels (see eval/README.md)
 ├── tests/              unit and end-to-end tests
 ├── data/               local database (not committed) and a sample record
