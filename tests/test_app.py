@@ -31,3 +31,12 @@ def test_page_renders_every_tab():
     at.run()
     assert not at.exception
     assert len(at.tabs) == 5
+
+
+def test_ask_page_off_by_default_shows_saved_investigations(monkeypatch):
+    from streamlit.testing.v1 import AppTest
+    monkeypatch.setenv("ENABLE_ASK", "0")
+    at = AppTest.from_file("../page/ask.py", default_timeout=120)
+    at.run()
+    assert not at.exception
+    assert not at.button                                   # no way to start a paid run

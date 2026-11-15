@@ -1,0 +1,186 @@
+[
+ {
+  "question": "Which AEDs have the most deaths filed as malfunctions, and do their makers also report late?",
+  "memo": "## Answer\nAll five AED families with the most deaths filed as something else are Physio-Control (Stryker) LIFEPAK models. The LIFEPAK 15 Monitor/Defibrillator leads with 62 reports whose text describes a death but which were filed as a malfunction or injury. Physio-Control does not stand out for late filing: 3.4% of its reports came after the 30-day deadline, which puts it mid-table. Several smaller makers file late more often.\n\n## Findings\n- Ranking of deaths filed as something else (rank_devices, MKJ): LIFEPAK 15 Monitor/Defibrillator 62 (vs 37 filed as deaths); LIFEPAK 15 Defibrillator/Monitor 45 (vs 41); LIFEPAK CR2 29 (vs 48); LIFEPAK 1000 23 (vs 15); LIFEPAK 35 11 (vs 16).\n- LIFEPAK 15 example: filed as a malfunction, and the narrative says the patient \"did not survive.\" An engineer found \"no evidence of device malfunction\" [report 0003015876-2020-00253].\n- LIFEPAK 15: reports describe a death, but the patient outcome field is blank. The reporters said the device did not contribute to the outcome [report 0003015876-2020-01375] [report 0003015876-2019-01278].\n- LIFEPAK CR2: the customer reported the device \"did not function during a resuscitation\" and the patient did not survive. The fault could not be reproduced [report 0003015876-2025-01542].\n- Late filing (rank_makers_late, MKJ): Physio-Control 3015876 3.4%. Higher: Graphic Controls/Nissha 22.7%, Leonhard Lang 11.3%, HeartSine 8.9%, Philips North America 4.5%. Lower: Zoll 0.4%, Cardiac Science 0.4%.\n- device_summary: LIFEPAK 15 has 6 open recalls, mostly about servicing and power. Reports are not rising now.\n\n## How sure we are\nThe classifier was checked against 181 reports labelled by hand. When it flags a report as a death filed as something else, it is right about 93% of the time (precision 0.93). It catches only about 44% of such reports (recall 0.44). So these counts are a lower bound, and the true numbers are likely higher.\n\n## Limits\n- A report is an allegation. In several of the cited reports, the reporter or maker says the device did not contribute to the death. High counts partly reflect how many devices are in use and how Physio-Control writes its narratives.\n- Late-filing shares are only available for each maker as a whole, not for each model. Keep any AED in service unless the manufacturer says otherwise.",
+  "citations": [
+   {
+    "report_number": "0003015876-2020-00253",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=9744972"
+   },
+   {
+    "report_number": "0003015876-2020-01375",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=10613742"
+   },
+   {
+    "report_number": "0003015876-2019-01278",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=8836665"
+   },
+   {
+    "report_number": "0003015876-2025-01542",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=22684834"
+   }
+  ],
+  "steps": [
+   "Plan: → Rank AED families by hidden deaths (deaths filed as malfunction/injury) · ○ Get late-filing shares for AED makers · ○ Pull top device summaries and sample hidden-death reports · ○ Check method accuracy and verify cited reports with evidence-checker · ○ Write case file to /case_file.md",
+   "rank_devices(product_code=MKJ, limit=5)",
+   "rank_makers_late(product_code=MKJ)",
+   "Plan: ✓ Rank AED families by hidden deaths (deaths filed as malfunction/injury) · ✓ Get late-filing shares for AED makers · → Pull top device summaries and sample hidden-death reports · ○ Check method accuracy and verify cited reports with evidence-checker · ○ Write case file to /case_file.md",
+   "device_summary(device_key=physio--lifepak-15-monitor-defibrillator)",
+   "hidden_death_reports(device_key=physio--lifepak-15-monitor-defibrillator, limit=3)",
+   "hidden_death_reports(device_key=physio--lifepak-15-defibrillator-monitor, limit=2)",
+   "hidden_death_reports(device_key=physio--lifepak-cr2-defibrillator, limit=2)",
+   "method_accuracy()",
+   "Plan: ✓ Rank AED families by hidden deaths (deaths filed as malfunction/injury) · ✓ Get late-filing shares for AED makers · ✓ Pull top device summaries and sample hidden-death reports · → Check method accuracy and verify cited reports with evidence-checker · ○ Write case file to /case_file.md",
+   "Asked the evidence-checker to check citations",
+   "Writing /case_file.md",
+   "Plan: ✓ Rank AED families by hidden deaths (deaths filed as malfunction/injury) · ✓ Get late-filing shares for AED makers · ✓ Pull top device summaries and sample hidden-death reports · ✓ Check method accuracy and verify cited reports with evidence-checker · ✓ Write case file to /case_file.md"
+  ],
+  "seconds": 50.2
+ },
+ {
+  "question": "What do the reports say went wrong with the LIFEPAK CR2 when a patient died?",
+  "memo": "## Answer\nWhen a patient died, LIFEPAK CR2 reports most often describe electrode or pad problems. Either the AED could not detect the patient through the pads, or the pads did not deploy. Other reports describe a device that did not work, gave no voice prompts, did not finish the ECG analysis, or was said to miss a shockable rhythm. These are allegations. In several reports, Stryker's review found the device did not contribute to the outcome or could not confirm the problem.\n\n## Findings\n- 7,186 reports in total. 48 were filed as deaths, and our classifier found 29 more whose text describes a death but which were filed as something else (device_summary).\n- In one report the device \"did not function during a resuscitation\"; the patient did not survive. Filed as a malfunction [report 0003015876-2025-01542].\n- In another, the device failed to give audio prompts and to complete an ECG analysis; the patient did not survive [report 0003015876-2020-01500].\n- **The AED could not detect the patient:**\n  - In one report the AED could not detect the patient and kept prompting \"place electrodes on patient\" while the pads were attached. Stryker's reviews disagree: one says device use did not contribute, a later one says it \"may have contributed\" [report 0003015876-2025-01011].\n  - In a similar report, the device logs were consistent with a pad not making good skin contact. The customer said device use did not contribute [report 0003015876-2021-01986].\n- In one report the electrodes did not deploy, and another AED was used after a delay; the patient did not survive. Stryker said the pads were not removed correctly [report 0003015876-2024-00220].\n- One report alleged a problem with recognising that a shock was needed. Stryker could not confirm it [report 0003015876-2025-01093].\n- There are two open recalls: one for missing lid magnets that can drain the battery early (Z-1189-2021), and one for skipped inspections after servicing (Z-2499-2025). Reports are not rising now (device_summary).\n\n## How sure we are\nTwo people checked reports by hand. When the classifier says a report describes a death, it is right about 93% of the time. But it catches only about 44% of such reports. So the 29 deaths filed as something else are a lower bound, and the real number is likely higher.\n\n## Limits\n- Reports are allegations, often written before the investigation ends. Some contradict themselves.\n- We read only the classifier's top-ranked reports, not all 77 that describe a death.\n\nKeep any LIFEPAK CR2 in service unless the manufacturer says otherwise.",
+  "citations": [
+   {
+    "report_number": "0003015876-2025-01542",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=22684834"
+   },
+   {
+    "report_number": "0003015876-2020-01500",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=10667503"
+   },
+   {
+    "report_number": "0003015876-2025-01011",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=22043038"
+   },
+   {
+    "report_number": "0003015876-2021-01986",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=12640351"
+   },
+   {
+    "report_number": "0003015876-2024-00220",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=18615768"
+   },
+   {
+    "report_number": "0003015876-2025-01093",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=22100376"
+   }
+  ],
+  "steps": [
+   "Plan: → Find LIFEPAK CR2 device key · ○ Get device summary and hidden-death reports · ○ Read key reports to see what went wrong · ○ Check method accuracy and verify citations with evidence-checker · ○ Write case file",
+   "search_devices(query=LIFEPAK CR2)",
+   "Plan: ✓ Find LIFEPAK CR2 device key · → Get device summary and hidden-death reports · ○ Read key reports to see what went wrong · ○ Check method accuracy and verify citations with evidence-checker · ○ Write case file",
+   "device_summary(device_key=physio--lifepak-cr2-defibrillator)",
+   "hidden_death_reports(device_key=physio--lifepak-cr2-defibrillator, limit=6)",
+   "method_accuracy()",
+   "Plan: ✓ Find LIFEPAK CR2 device key · ✓ Get device summary and hidden-death reports · → Read key reports to see what went wrong · ○ Check method accuracy and verify citations with evidence-checker · ○ Write case file",
+   "read_report(report_number=0003015876-2025-01011)",
+   "read_report(report_number=0003015876-2021-01986)",
+   "read_report(report_number=0003015876-2025-01093)",
+   "Plan: ✓ Find LIFEPAK CR2 device key · ✓ Get device summary and hidden-death reports · ✓ Read key reports to see what went wrong · → Check method accuracy and verify citations with evidence-checker · ○ Write case file",
+   "Asked the evidence-checker to check citations",
+   "Writing /case_file.md",
+   "Plan: ✓ Find LIFEPAK CR2 device key · ✓ Get device summary and hidden-death reports · ✓ Read key reports to see what went wrong · ✓ Check method accuracy and verify citations with evidence-checker · ✓ Write case file"
+  ],
+  "seconds": 51.5
+ },
+ {
+  "question": "Which CPAP machines have deaths filed as something else, and how sure can we be?",
+  "memo": "## Answer\nOur classifier finds a small number of CPAP/BiPAP reports where the text describes a death but the report was filed as a malfunction or injury. All of the top families are Philips Respironics: DreamStation Auto CPAP (6), Philips CPAP device (5), REMstar Auto A-Flex (4), BiPAP Pro BiFlex (2) and DreamStation Auto BiPAP (2). We should be cautious about these counts. When we read the flagged reports by hand, most turned out not to describe a real hidden death.\n\n## Findings\n- Ranking (rank_devices, BZD): those five families have 6, 5, 4, 2 and 2 classifier-flagged reports. Compare that with 1,343, 697, 193, 32 and 271 reports that were filed as deaths.\n- A real example: a DreamStation report filed as a malfunction says the patient died of Parkinson's disease. The reporter said the device did not malfunction, and the patient was using another maker's device at the time [report 2518422-2026-028418].\n- A REMstar report filed as a malfunction describes a death from kidney disease and diabetes complications. The death was added in a later update [report 2518422-2022-84039].\n- A Philips CPAP report about the foam recall, filed as a malfunction, says a death was \"alleged\" with no details. The rest of the narrative describes sinus symptoms [report 2518422-2024-25343].\n- False alarms: three flagged reports are corrections where the maker removed a death it had entered by mistake [report 2518422-2024-60786] [report 2518422-2022-26734] [report 2518422-2024-14216]. Another describes a patient who said they \"died for 9 minutes\" but needed no medical care [report 2518422-2022-88876].\n\n## How sure we are\nWe checked the classifier against 181 reports that people labelled by hand. When it flags a death, it is right about 93% of the time (precision 0.93). But it catches only about 44% of real hidden deaths (recall 0.44), so the true count of deaths filed as something else is probably higher. Treat these counts as a lower bound. Even so, for CPAP the flags we read here included many corrections, so the error rate for this device type looks worse than the overall precision figure suggests.\n\n## Limits\n- Reports are allegations. A report describing a death does not show that the device caused it, and the deaths we confirmed were put down to other illnesses.\n- We hand-read only 7 flagged reports, and some outcome fields still say \"Death\" after a correction.",
+  "citations": [
+   {
+    "report_number": "2518422-2026-028418",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=25677110"
+   },
+   {
+    "report_number": "2518422-2022-84039",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=15509015"
+   },
+   {
+    "report_number": "2518422-2024-25343",
+    "exists": true,
+    "states_death": false,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=19249302"
+   },
+   {
+    "report_number": "2518422-2024-60786",
+    "exists": true,
+    "states_death": false,
+    "filed_as": "Injury",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=20380524"
+   },
+   {
+    "report_number": "2518422-2022-26734",
+    "exists": true,
+    "states_death": false,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=14541161"
+   },
+   {
+    "report_number": "2518422-2024-14216",
+    "exists": true,
+    "states_death": false,
+    "filed_as": "Injury",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=18939360"
+   },
+   {
+    "report_number": "2518422-2022-88876",
+    "exists": true,
+    "states_death": true,
+    "filed_as": "Malfunction",
+    "fda_url": "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id=15692250"
+   }
+  ],
+  "steps": [
+   "Plan: → Rank CPAP/BiPAP (BZD) device families by hidden deaths · ○ Pull top hidden-death reports for leading device(s) · ○ Get method accuracy figures · ○ Verify cited reports with evidence-checker · ○ Write case file to /case_file.md and reply",
+   "rank_devices(product_code=BZD, by=hidden_deaths, limit=5)",
+   "method_accuracy()",
+   "Plan: ✓ Rank CPAP/BiPAP (BZD) device families by hidden deaths · → Pull top hidden-death reports for leading device(s) · ✓ Get method accuracy figures · ○ Verify cited reports with evidence-checker · ○ Write case file to /case_file.md and reply",
+   "hidden_death_reports(device_key=respironics--dreamstation-auto-cpap, limit=3)",
+   "hidden_death_reports(device_key=respironics--philips-cpap-device, limit=2)",
+   "hidden_death_reports(device_key=respironics--remstar-auto-a-flex, limit=2)",
+   "Plan: ✓ Rank CPAP/BiPAP (BZD) device families by hidden deaths · ✓ Pull top hidden-death reports for leading device(s) · ✓ Get method accuracy figures · → Verify cited reports with evidence-checker · ○ Write case file to /case_file.md and reply",
+   "Asked the evidence-checker to check citations",
+   "Writing /case_file.md",
+   "Plan: ✓ Rank CPAP/BiPAP (BZD) device families by hidden deaths · ✓ Pull top hidden-death reports for leading device(s) · ✓ Get method accuracy figures · ✓ Verify cited reports with evidence-checker · ✓ Write case file to /case_file.md and reply"
+  ],
+  "seconds": 49.7
+ }
+]
