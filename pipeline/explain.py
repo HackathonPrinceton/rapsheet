@@ -93,7 +93,7 @@ def calibration(con, threshold: float) -> dict:
     gold = gold_numbers()
     with open(LABELS, encoding="utf-8") as f:
         llm = [(r["report_number"], int(r["label"])) for r in csv.DictReader(f)
-               if r["source"].startswith("claude_api") and r["report_number"] not in gold]
+               if r["source"].startswith("llm_api") and r["report_number"] not in gold]
     return {"hand_checked": bands(pairs_from(dict(hand).items())),
             "large_model_labels": bands(pairs_from(llm))}
 

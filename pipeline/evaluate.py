@@ -7,7 +7,7 @@ Methods compared, all on the same hand-checked reports:
   1. death word      any death-related word in the text (what a keyword search gives)
   2. outcome field   the FDA's patient outcome field says "Death" (no text reading at all)
   3. classifier      our small trained model
-  4. large model     Claude reading each report directly (the expensive reference)
+  4. large model     a large language model reading each report directly (the expensive reference)
 
 The gold set over-samples the interesting reports, so each row is also weighted back to how common
 its kind of report is in the full data. Both the plain and the weighted figures are written.
@@ -45,7 +45,7 @@ def kappa(pairs: list[tuple[str, str]]) -> float | None:
 
 
 def large_model_answers(rows: list[dict]) -> dict:
-    """Claude's answer for each gold report, saved so a rerun costs nothing."""
+    """The large language model's answer for each gold report, saved so a rerun costs nothing."""
     path = os.path.join(EVAL, "gold_large_model.csv")
     done = {}
     if os.path.exists(path):

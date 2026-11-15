@@ -19,8 +19,8 @@
   },
   "hand_checked_only": null,
   "label_sources": {
-    "claude_api": 1835,
-    "claude_api_top_noword": 287,
-    "claude_session": 553
+    "llm_api": 1835,
+    "llm_api_top_noword": 287,
+    "llm_session": 553
   }
 }

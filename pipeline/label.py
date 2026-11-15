@@ -24,7 +24,7 @@ from .deaths import LABELS, TO_LABEL, gold_numbers
 from .store import connect
 
 load_dotenv()
-MODEL = os.environ.get("LABEL_MODEL", "claude-opus-5-5")
+MODEL = os.environ.get("LABEL_MODEL", "")      # set LABEL_MODEL in .env (never committed)
 
 INSTRUCTIONS = """You are labelling FDA medical device adverse event reports for a research project.
 
@@ -94,6 +94,8 @@ def main():
     rows = [r for r in todo_rows(args.top_noword) if r[0] not in done and r[0] not in gold_numbers()]
     if args.limit:
         rows = rows[:args.limit]
+    if not MODEL:
+        raise SystemExit("Set LABEL_MODEL in .env to the model to label with.")
     print(f"{len(rows)} reports to label with {MODEL} ({len(done)} already labelled)")
 
     client = anthropic.Anthropic()
@@ -104,7 +106,7 @@ def main():
     if new_file:
         writer.writerow(["report_number", "label", "quote", "source", "note"])
     counts = {"labelled": 0, "died": 0, "skipped": 0}
-    source = "claude_api_top_noword" if args.top_noword else "claude_api"
+    source = "llm_api_top_noword" if args.top_noword else "llm_api"
 
     def work(row):
         number, narrative = row
