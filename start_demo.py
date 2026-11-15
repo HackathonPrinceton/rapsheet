@@ -47,8 +47,24 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8501)
     ap.add_argument("--no-bot", action="store_true")
+    ap.add_argument("--tunnel", action="store_true", help="serve the page from this laptop even if a hosted page is set")
     args = ap.parse_args()
     procs = []
+    # If .env already points at a permanently hosted page (not localhost, not a temporary tunnel),
+    # keep it: only the bot needs to run on this laptop.
+    current = ""
+    if os.path.exists(ENV):
+        hit = re.search(r"^PAGE_BASE_URL=(.*)$", open(ENV, encoding="utf8").read(), re.M)
+        current = hit.group(1).strip() if hit else ""
+    hosted = current.startswith("https://") and "trycloudflare" not in current and "localhost" not in current
+    if hosted and not args.tunnel:
+        print(f"Page is hosted at {current}. Starting only the bot. (Use --tunnel to serve the page from this laptop.)")
+        try:
+            subprocess.run([sys.executable, "-m", "bot.photon_bot"], cwd=ROOT)
+        except KeyboardInterrupt:
+            print("
+Stopping.")
+        return
     try:
         print("1/4 starting the page...")
         procs.append(subprocess.Popen([sys.executable, "-m", "streamlit", "run", "page/app.py", "--server.headless",
