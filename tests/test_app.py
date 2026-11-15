@@ -52,3 +52,4 @@ def test_patient_page_has_three_tabs_and_plain_answers():
         assert not at.exception
         assert len(at.tabs) == 3
         assert any(expect in m.value for m in at.markdown)
+        assert not any("died" in m.value for m in at.markdown)      # no death counts on the patient page

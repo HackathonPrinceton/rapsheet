@@ -8,7 +8,6 @@ INVESTIGATOR_URL (env) is where "Read the reports" points; it defaults to the sa
 """
 import difflib
 import html
-import json
 import os
 import re
 import sys
@@ -44,15 +43,6 @@ def all_devices() -> list[dict]:
         "WHERE brand != '' AND device_key NOT LIKE '%--unknown%' AND device_key NOT LIKE 'unknown--%' "
         "GROUP BY device_key HAVING n >= 30 ORDER BY n DESC").fetchall()
     return [dict(r) for r in rows]
-
-
-@st.cache_data(show_spinner=False)
-def hand_check():
-    path = os.path.join(ROOT, "eval", "results", "final_results.json")
-    if not os.path.exists(path):
-        return None
-    with open(path, encoding="utf-8") as f:
-        return json.load(f).get("methods", {}).get("classifier")
 
 
 def esc(x) -> str:
@@ -150,7 +140,7 @@ paper.markdown(f"""<div class="rec-eyebrow"><span>Your device</span><span>{esc(m
   <div class="rec-note">A {esc(kind)} · <a href="?" target="_self">Pick another device</a></div>""",
                unsafe_allow_html=True)
 
-tab_ok, tab_wrong, tab_reported = paper.tabs(["Is it OK to use?", "What's wrong?", "Others' reports"])
+tab_ok, tab_wrong, tab_safe = paper.tabs(["Is it OK to use?", "What's wrong?", "Stay safe"])
 
 # ---------------------------------------------------------------- is it OK to use?
 with tab_ok:
@@ -203,37 +193,36 @@ with tab_wrong:
     st.markdown(cards, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------- what others reported
-with tab_reported:
-    total, coded = t["reports"], t["deaths_coded"]
-    hidden = t["deaths_hidden"] if (is_aed and t.get("hidden_death_model_ran")) else 0
-    since = (rec["period"]["first"] or "")[:4]
-    out = (f'<div class="p-explain">People and companies have told the FDA about problems with this {thing} '
-           f'<b>{total:,} times</b> since {esc(since)}.</div>')
-    if hidden:
-        died = coded + hidden
-        share = round(100 * coded / died)
-        out += (f'<div class="p-deaths"><div class="p-k" style="margin-top:0">THE MOST SERIOUS</div>'
-                f'<div><span class="big">{died:,}</span> of those reports involve someone who died.</div>'
-                f'<div class="p-split"><div style="width:{share}%;background:{style.NAVY}"></div>'
-                f'<div style="width:{100 - share}%;background:{style.CLIP}"></div></div>'
-                f'<div>In <b style="color:{style.CLIP}">{hidden}</b> of them, the death was filed as a '
-                f'"malfunction", so it is easy to miss.</div>'
-                f'<div class="p-small">A report does not prove the device caused the death. AEDs are used on people '
-                f'in cardiac arrest, and many do not survive even when the device works.</div></div>')
-    else:
-        out += (f'<div class="p-deaths"><div class="p-k" style="margin-top:0">THE MOST SERIOUS</div>'
-                f'<div><span class="big">{coded:,}</span> of those reports were filed as a death.</div>'
-                f'<div class="p-small">A report does not prove the device caused the death.</div></div>')
+with tab_safe:
+    # Practical precautions only: no death counts here, which belong on the investigator page.
     if is_aed:
-        out += ('<div class="p-k">WHAT TO CHECK ON YOUR AED</div>'
-                '<div class="p-step"><span class="n">✓</span><span>The readiness light shows it is ready</span></div>'
-                '<div class="p-step"><span class="n">✓</span><span>The pads are sealed and within their date</span></div>'
-                '<div class="p-step"><span class="n">✓</span><span>The battery is within its date</span></div>')
-    clf = hand_check()
-    if clf and hidden:
-        right, checked = clf["true_pos"], clf["true_pos"] + clf["false_pos"]
-        out += (f'<div class="p-small" style="margin-top:.8rem">We found the deaths filed as a malfunction by reading '
-                f'every report. People checked our work by hand: right {right} times out of {checked}.</div>')
-    out += (f'<div class="p-small" style="margin-top:1rem"><a href="{INVESTIGATOR}?d={esc(rec["device_key"])}'
-            f'&tab=evidence" target="_blank">Read the reports yourself</a></div>')
+        checks = [("Look at the readiness light", "Check it every week or so. If it shows a warning or beeps, "
+                                                  f"contact {maker}."),
+                  ("Keep the pads in date", "Pads are sealed and have an expiry date. Replace them before it, "
+                                            "and always after the AED has been used."),
+                  ("Keep the battery in date", "The battery has its own date. Replace it before it runs out."),
+                  ("Keep it easy to reach", "Everyone nearby should know where it is. Don't lock it away."),
+                  ("Register it with the maker", f"Registering your AED with {maker} means they can tell you "
+                                                 "directly about recalls.")]
+    else:
+        checks = [("Follow the cleaning instructions", "Clean the mask, tubing and water chamber as the maker's "
+                                                       "guide says."),
+                  ("Watch for anything unusual", f"Particles in the tubing, odd smells or unusual noises: stop "
+                                                 f"and contact {maker} or your equipment supplier."),
+                  ("Don't stop treatment on your own", "If you are worried about your machine, talk to your doctor "
+                                                       "before you stop using it."),
+                  ("Register it with the maker", f"Registering your machine with {maker} means they can tell you "
+                                                 "directly about recalls.")]
+    out = '<div class="p-k" style="margin-top:.4rem">SIMPLE CHECKS</div>' + "".join(
+        f'<div class="p-step"><span class="n">✓</span><span><b>{esc(h)}</b><br>{esc(b)}</span></div>' for h, b in checks)
+    out += ('<div class="p-k">IF SOMETHING GOES WRONG</div>'
+            f'<div class="p-step"><span class="n">1</span><span>Contact <b>{esc(maker)}</b> and describe what '
+            f'happened.</span></div>'
+            '<div class="p-step"><span class="n">2</span><span>Tell the FDA. Anyone can report a problem with a '
+            'medical device through <a href="https://www.fda.gov/safety/medwatch-fda-safety-information-and-'
+            'adverse-event-reporting-program" target="_blank">MedWatch</a>. It helps others.</span></div>'
+            '<div class="p-step"><span class="n">3</span><span>Text <b>SAVE</b> to us to get a message if anything '
+            'changes for your device.</span></div>')
+    out += (f'<div class="p-small" style="margin-top:1rem">Want the details? <a href="{INVESTIGATOR}?d='
+            f'{esc(rec["device_key"])}" target="_blank">See the full FDA record for this device</a></div>')
     st.markdown(out, unsafe_allow_html=True)
