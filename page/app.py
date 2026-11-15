@@ -7,7 +7,6 @@ Explanations are precomputed by pipeline/explain.py, so the page loads no model.
 import html
 import json
 import os
-import re
 import sys
 
 import altair as alt
@@ -16,6 +15,7 @@ import streamlit as st
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, ROOT)
+from pipeline.deathwords import STATES_DEATH  # noqa: E402
 from service import record  # noqa: E402
 
 BLUE, RED, INK, GREY, LIGHT, LINE = "#2563eb", "#dc2626", "#111827", "#6b7280", "#cbd5e1", "#e5e7eb"
@@ -23,8 +23,7 @@ EVENT_COLORS = {"Death": RED, "Injury": "#f59e0b", "Malfunction": "#cbd5e1", "Ot
 METRICS = "https://github.com/HackathonPrinceton/rapsheet/blob/main/eval/metrics.md"
 LINKS = {"fda_url": st.column_config.LinkColumn("FDA page", display_text="open ↗"),
          "fda_api_url": st.column_config.LinkColumn("Raw", display_text="json")}
-DEATH_PHRASES = re.compile(r"did not survive|not survive|died|passed away|deceased|expired|not (?:be )?resuscitated|"
-                           r"pronounced|death|fatal|demise|succumbed", re.I)
+DEATH_PHRASES = STATES_DEATH          # shared with the pipeline (pipeline/deathwords.py)
 
 st.set_page_config(page_title="Rap Sheet", page_icon="◉", layout="wide")
 st.markdown(f"""
@@ -135,7 +134,7 @@ def provenance():
 
 def mtime(*names) -> float:
     """Latest change time of eval files, so cached results refresh when the files are updated."""
-    paths = [os.path.join(ROOT, "eval", n) for n in names]
+    paths = [os.path.join(ROOT, "eval", n) for n in names]   # names are paths inside eval/
     return max([os.path.getmtime(p) for p in paths if os.path.exists(p)] or [0])
 
 
@@ -160,7 +159,7 @@ def _gold_mistakes(changed):
     out = {"false_pos": [], "missed": 0}
     seen = set()
     con = connect()
-    for name in ("gold_A.csv", "gold_B.csv"):
+    for name in ("hand_check/checker_A.csv", "hand_check/checker_B.csv"):
         path = os.path.join(ROOT, "eval", name)
         if not os.path.exists(path):
             continue
@@ -184,7 +183,7 @@ def _gold_mistakes(changed):
 
 
 def gold_mistakes():
-    return _gold_mistakes(mtime("gold_A.csv", "gold_B.csv"))
+    return _gold_mistakes(mtime("hand_check/checker_A.csv", "hand_check/checker_B.csv"))
 
 
 def dots(right: int, total: int) -> str:
@@ -242,8 +241,8 @@ if not rec:
 
 d, t, m = rec["device"], rec["totals"], rec["manufacturer"]
 maker = " ".join(w for w in d["manufacturer"].split() if not w.isdigit()).title()
-explain = load_json("explanations.json")
-gold = load_json("gold_results.json")
+explain = load_json("results/explanations.json")
+gold = load_json("results/final_results.json")
 reps = explain.get("reports", {})
 cal = explain.get("meta", {}).get("calibration", {}).get("hand_checked", [])
 top_band = cal[-1] if cal else None

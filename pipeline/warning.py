@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from .match import norm, recall_matches
+from .paths import BACKTEST
 from .store import connect
 
 HISTORY = 12        # months of the device's own history used as the baseline
@@ -22,7 +23,7 @@ Z_FLAG = 3.0        # robust z-score at or above which a month is flagged
 MIN_REPORTS = 5     # a flagged month needs at least this many reports
 MIN_DEVICE_REPORTS = 30   # devices with fewer reports in total are not scored
 WINDOW = 24         # backtest: a warning counts if it falls in the 24 months before the recall
-METRICS = os.path.join(os.path.dirname(__file__), "..", "eval", "warning_metrics.json")
+METRICS = BACKTEST
 
 
 def month_index(first: str, last: str) -> list[str]:

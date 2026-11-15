@@ -1,12 +1,25 @@
-# Measured results
+# Results
 
-**Status (Nov 14, night): final.** Hand-checked by two people (Krutika and Mrudula), 230 labels on 200
-reports, each labelled without seeing any model's answer. Sections marked "solid" come straight from the
-data and will not change.
+All figures come from public openFDA data: 420,167 adverse event reports for AEDs (product code MKJ)
+and CPAP/BiPAP machines (BZD), received January 2019 to November 2026, and 419 recalls.
+Hand-checked by two people (Krutika and Mrudula) without seeing any model's answer. Final.
 
-Data: 420,167 FDA adverse event reports received from January 2019 to November 2026 for two device
-types, AEDs (product code MKJ) and CPAP/BiPAP machines (BZD), and
-419 recalls. Source: openFDA.
+## At a glance
+
+| Question | Answer |
+|---|---|
+| When our model says a report describes a death filed as something else, how often is it right? | **27 of 29 (93%)**, checked by hand |
+| How often is a keyword search right? | 59 of 134 (44%); about 7% on the real mix of reports |
+| How many of the deaths does our model find? | 44% (it is set to flag only when sure) |
+| How well do the two human checkers agree? | 27 of 30 shared reports (Cohen's kappa 0.78) |
+| How many reports does the model flag across all data? | 276 of 414,478 reports not filed as deaths |
+| How many manufacturer reports reach the FDA within 30 days? | 68.9% (2019 to 2022, includes follow-up reports) |
+| Do "reports rising" flags come before recalls? | 48.9% of recalls, against 35.8% by chance: a weak signal |
+
+Where the numbers live: [`results/final_results.json`](results/final_results.json) (the method comparison),
+[`results/explanations.json`](results/explanations.json) (why each report was flagged, and calibration),
+[`results/reports_rising_backtest.json`](results/reports_rising_backtest.json). A guide to every file is in
+[`README.md`](README.md).
 
 ## 1. Deaths in the FDA's own fields
 
@@ -48,35 +61,23 @@ Reading:
 
 Weighted to the real mix of reports (the hand-check set over-samples interesting cases), classifier
 precision is 0.97 and keyword precision 0.07. Weighted recall is too uncertain to quote. All figures in
-`eval/gold_results.json`; calibration by score range in `eval/explanations.json`.
+[`results/final_results.json`](results/final_results.json); calibration by score range in [`results/explanations.json`](results/explanations.json).
 
 Limits: 181 reports from two device types. 27 of 29 is consistent with a precision of roughly 78% to 99%.
 
-### Earlier figures, against model-assigned labels
+### What the classifier does not do
 
-Accuracy on 1,005 held-out labelled reports not coded as deaths, of which 34 describe a death:
+It does not find deaths that a keyword search would miss. We tested this directly: of the 287
+highest-scoring reports that contain no death-related word, 4 described a death. In these two device
+types, deaths written without any death-related word are rare.
 
-| | Precision | Recall |
-|---|---|---|
-| Classifier | 0.913 (21 of 23 flagged) | 0.618 (21 of 34) |
-| Any death-related word | 0.044 | 0.912 |
+Death-related words alone are a poor signal: in AED reports they are mostly about equipment ("the
+battery was dead", "the pads were expired"), and in CPAP reports mostly stock denials ("there was no
+reported patient death or serious injury").
 
-Reading: a keyword search is right about 1 time in 23. The classifier is right about 9 times in 10,
-and finds about 6 in 10 of the deaths. It trades recall for precision on purpose: a wrong "hidden
-death" on a public page is worse than a missed one.
-
-What the classifier does not do: find deaths that a keyword search would miss. We tested this directly.
-We took the 287 highest-scoring reports that contain no death-related word and had them labelled: 4
-described a death ("the patient was not resuscitated"). Deaths described without any death-related word
-are rare in these two device types, and the model does not find them reliably.
-
-Labels: 2,675 reports. 2,122 were labelled by a large language model through the API, 553 by an AI
-model in a working session. These figures measure agreement with the large model, not with a person;
-the hand-checked table above is the one to quote.
-
-Death-related words alone are a poor signal: in AED reports they are mostly about equipment
-("the battery was dead", "the pads were expired"), and in CPAP reports mostly stock denials
-("there was no reported patient death or serious injury").
+Training: 2,675 reports labelled by a large language model. Its training-time check against those
+labels is in [`results/classifier_training.json`](results/classifier_training.json); the hand-checked
+table above is the one to quote.
 
 ## 3. Late reporting (rule)
 
@@ -92,7 +93,7 @@ which may overstate lateness.
 
 Our figures cover two device types only, so they are not expected to match the published ones.
 
-## 4. Early warning (solid measurement, weak result)
+## 4. Reports rising (weak signal)
 
 A month is flagged when a device's report count is far above its own previous 12 months
 (robust z-score of 3 or more, at least 5 reports). 301 devices scored, 20,476 device-months, 974 flagged.
@@ -115,6 +116,7 @@ bulk. Recalls are matched to devices by maker and brand wording, which is imperf
 
 ```
 make pull      # about 50 minutes
-make models    # train, score, backtest
-python -m pipeline.evaluate   # compare four methods on the hand-checked set
+make models    # train, score, explain, backtest
+make evaluate  # compare four methods on the hand-checked set
+make test      # run the tests
 ```

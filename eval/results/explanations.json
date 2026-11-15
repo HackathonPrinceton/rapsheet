@@ -1738,15 +1738,15 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2023-01468",
+     "report_number": "0003015876-2023-00705",
      "text": "THE PATIENT ASSOCIATED WITH THE REPORTED EVENT DID NOT SURVIVE.",
      "source": "labelled by a large language model",
      "similarity": 1.0
     },
     {
-     "report_number": "0003015876-2025-01542",
+     "report_number": "0003015876-2024-00143",
      "text": "THE PATIENT ASSOCIATED WITH THE REPORTED EVENT DID NOT SURVIVE.",
-     "source": "checked by a person",
+     "source": "labelled by a large language model",
      "similarity": 1.0
     }
    ],
@@ -6354,13 +6354,13 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2021-00975",
+     "report_number": "0003015876-2021-00979",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.94
     },
     {
-     "report_number": "0003015876-2021-00979",
+     "report_number": "0003015876-2021-00975",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.94
@@ -6844,13 +6844,13 @@
    "baseline": -7.62,
    "similar_confirmed": [
     {
-     "report_number": "0003015876-2021-00975",
+     "report_number": "0003015876-2021-00979",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.77
     },
     {
-     "report_number": "0003015876-2021-00979",
+     "report_number": "0003015876-2021-00975",
      "text": "THE PATIENT DID NOT SURVIVE, HOWEVER THE CUSTOMER A HEALTH CARE PROVIDER CONFIRMED THAT THE DEVICE USE DID NOT CONTRIBUTE TO THE PATIENT OUTCOME.",
      "source": "checked by a person",
      "similarity": 0.77

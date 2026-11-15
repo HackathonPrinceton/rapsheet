@@ -71,7 +71,7 @@ def summary(rec: dict, page_url: str | None = None) -> str:
     parts.append(f"{t['reports']:,} reports to the FDA{' since ' + since if since else ''}.")
     parts.append(coded)
     # The text classifier's count goes in the text: on hand-checked reports it was right 15 times in 16
-    # (eval/metrics.md). The outcome-field count does not: only 1 in 3 of those reports describe a death.
+    # (eval/metrics.md). The outcome-field count does not: only about half of those reports describe a death.
     hidden = t.get("deaths_hidden") if t.get("hidden_death_model_ran") else 0
     if hidden:
         line = (f"{hidden} more {'report describes' if hidden == 1 else 'reports describe'} a patient death "

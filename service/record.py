@@ -4,6 +4,7 @@ import os
 import re
 from difflib import SequenceMatcher
 
+from pipeline.deathwords import STATES_DEATH, excerpt
 from pipeline.match import core_phrase, norm, recall_matches
 from pipeline.store import connect
 
@@ -162,18 +163,8 @@ def top_reports(device_key: str, n: int = 3) -> list[dict]:
              "excerpt": excerpt(r["narrative"]), **links(r)} for r in rows]
 
 
-DEATH_WORDS = re.compile(
-    r"(died|death|deceased|expired|passed away|fatal|did not survive|not be revived|pronounced)", re.I)
-
-
-def excerpt(narrative: str, width: int = 260) -> str:
-    """The part of the narrative around the first death-related phrase."""
-    text = re.sub(r"\s+", " ", narrative or "")
-    hit = DEATH_WORDS.search(text)
-    if not hit:
-        return text[:width]
-    start = max(0, hit.start() - width // 2)
-    return ("..." if start else "") + text[start:start + width] + ("..." if start + width < len(text) else "")
+# Shared with the pipeline, so the page, the bot and the model quote the same wording.
+DEATH_WORDS = STATES_DEATH
 
 
 # ---------------------------------------------------------------- audit helpers (used by the page)

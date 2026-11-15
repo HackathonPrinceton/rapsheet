@@ -14,3 +14,4 @@ pillow
 pillow-heif
 pydantic
 scipy
+pytest

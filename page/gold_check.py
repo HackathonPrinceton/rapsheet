@@ -1,9 +1,9 @@
 """Hand-check the gold set one report at a time.
 
 Run:  streamlit run page/gold_check.py --server.port 8502
-Pick A or B at the top. Your answers are saved to eval/gold_A.csv or eval/gold_B.csv after every click,
+Pick A or B at the top. Your answers are saved to eval/hand_check/checker_A.csv or checker_B.csv after every click,
 so you can stop and come back. The model's scores are never shown (the check is blind), and
-eval/gold_key.csv is never opened here.
+eval/hand_check/answer_key.csv is never opened here.
 """
 import csv
 import html
@@ -13,7 +13,7 @@ import re
 import streamlit as st
 
 EVAL = os.path.join(os.path.dirname(__file__), "..", "eval")
-BLIND = os.path.join(EVAL, "gold_blind.csv")
+BLIND = os.path.join(EVAL, "hand_check", "blind_set.csv")
 DIED = "died (1 = this patient died, 0 = no, ? = cannot tell)"
 RULES = """
 **1 = died**: the text says **this patient** died.
@@ -37,7 +37,7 @@ def load_blind():
 
 
 def out_path(checker: str) -> str:
-    return os.path.join(EVAL, f"gold_{checker}.csv")
+    return os.path.join(EVAL, "hand_check", f"checker_{checker}.csv")
 
 
 def load_answers(checker: str) -> dict:
@@ -85,7 +85,7 @@ i = min(st.session_state.i, len(rows) - 1)
 r = rows[i]
 current = answers.get(r["report_number"], {})
 
-st.progress(done / len(rows), text=f"Checker {checker}: {done} of {len(rows)} done · saved to eval/gold_{checker}.csv")
+st.progress(done / len(rows), text=f"Checker {checker}: {done} of {len(rows)} done · saved to eval/hand_check/checker_{checker}.csv")
 st.subheader(f"Report {i + 1} of {len(rows)}  ·  {r['report_number']}" + ("  ·  (both)" if r["checker"] == "both" else ""))
 if current.get("died"):
     st.caption(f"Your current answer: **{ {'1': 'Died', '0': 'Did not die', '?': 'Cannot tell'}[current['died']] }**")
@@ -136,4 +136,4 @@ c4.button("◀ Back", on_click=lambda: st.session_state.update(i=max(i - 1, 0)),
 c5.button("Skip ▶", on_click=lambda: st.session_state.update(i=min(i + 1, len(rows) - 1)), width="stretch")
 
 if done == len(rows):
-    st.success(f"All {len(rows)} done. Your file is eval/gold_{checker}.csv. Send it to Krutika or push it.")
+    st.success(f"All {len(rows)} done. Your file is eval/hand_check/checker_{checker}.csv. Send it to Krutika or push it.")

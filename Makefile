@@ -11,6 +11,8 @@ deaths:
 	$(PY) -m pipeline.deaths train
 	$(PY) -m pipeline.deaths score
 	$(PY) -m pipeline.explain
+test:
+	$(PY) -m pytest -q tests
 evaluate:
 	$(PY) -m pipeline.evaluate
 scores:
@@ -29,4 +31,4 @@ demo:
 	$(PY) start_demo.py
 alerts:
 	$(PY) -m bot.alerts --dry-run
-.PHONY: pull sample label deaths evaluate scores warning models all serve page bot demo alerts
+.PHONY: test pull sample label deaths evaluate scores warning models all serve page bot demo alerts

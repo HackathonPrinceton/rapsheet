@@ -1,6 +1,6 @@
 """Explain every hidden-death flag, so a reader can see why the model said "this patient died".
 
-Usage:  python -m pipeline.explain        # writes eval/explanations.json
+Usage:  python -m pipeline.explain        # writes eval/results/explanations.json
 
 For each flagged report it records:
   - the passage the model scored highest (what it was reading)
@@ -25,20 +25,19 @@ import re
 
 import numpy as np
 
-from .deaths import EVAL, LABELS, embed, gold_numbers, load_model, passages
+from .deaths import embed, gold_numbers, load_model
+from .deathwords import STATES_DEATH
+from .paths import CHECKERS, EXPLANATIONS, LABELS
 from .store import connect
 
-OUT = os.path.join(EVAL, "explanations.json")
-STATES_DEATH = re.compile(r"did not survive|not survive|died|passed away|deceased|expired(?! battery| pads)|"
-                          r"not (be )?resuscitated|pronounced|cause of death|patient death|death of", re.I)
+OUT = EXPLANATIONS
 EMB_DIM = 384
 
 
 def confirmed_examples(con) -> list[dict]:
     """Reports confirmed as describing a death: hand-checked first, then large-model labels."""
     out = []
-    hand = os.path.join(EVAL, "gold_A.csv")
-    for path, source in ((hand, "checked by a person"), (os.path.join(EVAL, "gold_B.csv"), "checked by a person")):
+    for path, source in ((CHECKERS["A"], "checked by a person"), (CHECKERS["B"], "checked by a person")):
         if os.path.exists(path):
             with open(path, encoding="utf-8-sig") as f:
                 rows = list(csv.DictReader(f))
@@ -84,7 +83,7 @@ def calibration(con, threshold: float) -> dict:
         return res
 
     hand = []
-    for path in (os.path.join(EVAL, "gold_A.csv"), os.path.join(EVAL, "gold_B.csv")):
+    for path in (CHECKERS["A"], CHECKERS["B"]):
         if os.path.exists(path):
             with open(path, encoding="utf-8-sig") as f:
                 rows = list(csv.DictReader(f))

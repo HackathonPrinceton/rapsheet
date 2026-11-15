@@ -29,4 +29,4 @@ build/
 Thumbs.db
 .vscode/
 .idea/
-eval/to_label.csv
+eval/training/to_label.csv

@@ -1,12 +1,12 @@
 """Label report narratives with a large language model, to train and test the small classifier.
 
 Usage:
-  python -m pipeline.label                      # label the reports in eval/to_label.csv
+  python -m pipeline.label                      # label the reports in eval/training/to_label.csv
   python -m pipeline.label --top-noword 300     # label the model's top-scoring reports that contain
                                                 # no death-related word (checks what keywords miss)
   python -m pipeline.label --limit 50           # try a small batch first
 
-Results are appended to eval/labels.csv, so a stopped run can be restarted. Needs ANTHROPIC_API_KEY.
+Results are appended to eval/training/labels.csv, so a stopped run can be restarted. Needs ANTHROPIC_API_KEY.
 These labels are a starting point: a hand-checked sample is what the accuracy figures rest on.
 """
 import argparse
@@ -20,7 +20,8 @@ import anthropic
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from .deaths import LABELS, TO_LABEL, gold_numbers
+from .deaths import gold_numbers
+from .paths import LABELS, TO_LABEL
 from .store import connect
 
 load_dotenv()

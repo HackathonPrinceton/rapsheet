@@ -1,8 +1,8 @@
 """Hidden-death finder: reports whose text says the patient died but which are not coded as deaths.
 
 Usage:
-  python -m pipeline.deaths sample     # write eval/to_label.csv (the reports to label)
-  python -m pipeline.deaths train      # train on eval/labels.csv, print and save metrics
+  python -m pipeline.deaths sample     # write eval/training/to_label.csv (the reports to label)
+  python -m pipeline.deaths train      # train on eval/training/labels.csv, print and save metrics
   python -m pipeline.deaths score      # score every report not coded as a death, fill the database
 
 How it works: each narrative is cut into short passages. A small sentence-embedding model turns
@@ -22,31 +22,21 @@ import re
 
 import numpy as np
 
+from .deathwords import ANY_DEATH_WORD as DEATH_WORDS
+from .deathwords import has_death_word
+from .paths import ANSWER_KEY, BLIND_SET, CLASSIFIER_SCORING, LABELS, TO_LABEL
+from .paths import CLASSIFIER_TRAINING as METRICS
 from .store import connect
 
 HERE = os.path.dirname(__file__)
-EVAL = os.path.join(HERE, "..", "eval")
-TO_LABEL = os.path.join(EVAL, "to_label.csv")
-LABELS = os.path.join(EVAL, "labels.csv")          # report_number, label (1/0), quote, source
-METRICS = os.path.join(EVAL, "death_metrics.json")
 MODEL = os.path.join(HERE, "..", "data", "death_model.pkl")
 EMBEDDER = "sentence-transformers/all-MiniLM-L6-v2"   # 80 MB, runs on a laptop CPU
 MAX_CHARS, MAX_PASSAGES = 500, 10
 
-# Broad on purpose: it also matches "the battery expired" and "risk of death".
-DEATH_WORDS = re.compile(
-    r"\b(died|dies|dead|death|deceased|expired?|expir\w+|passed away|fatal\w*|demise|did not survive|"
-    r"not survive|not be revived|unable to revive|could not be resuscitated|resuscitation (was |efforts? )?"
-    r"(were |was )?(unsuccessful|ceased|stopped|terminated)|pronounced|autopsy|succumbed|mortality)\b", re.I)
-
-
+# Reports about a patient who lived: the negatives the model most needs to see.
 PATIENT_LIVED = re.compile(r"surviv|resuscitat|recovered|discharged|transported|stable|no (adverse|harm|injur)", re.I)
 # Wording that may describe a death without using a death word; kept out of the assumed negatives.
 UNCLEAR_OUTCOME = re.compile(r"not (be |been )?(resuscitat|reviv)|unsuccessful|ceased|asystole|outcome (is|was) unknown", re.I)
-
-
-def has_death_word(text: str) -> bool:
-    return bool(DEATH_WORDS.search(text or ""))
 
 
 def passages(narrative: str) -> list[str]:
@@ -148,7 +138,7 @@ def sample(n_word: int, n_noword: int, n_coded: int, seed: int = 0):
               [(r, "no_death_word") for r in rng.sample(noword, min(n_noword, len(noword)))] +
               [(r, "coded_death") for r in rng.sample(coded, min(n_coded, len(coded)))])
     rng.shuffle(picked)
-    os.makedirs(EVAL, exist_ok=True)
+    os.makedirs(os.path.dirname(TO_LABEL), exist_ok=True)
     with open(TO_LABEL, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["report_number", "product_code", "pool", "narrative"])
@@ -161,10 +151,9 @@ def sample(n_word: int, n_noword: int, n_coded: int, seed: int = 0):
 # ---------------------------------------------------------------- train
 
 def gold_numbers() -> set:
-    path = os.path.join(EVAL, "gold_key.csv")
-    if not os.path.exists(path):
+    if not os.path.exists(ANSWER_KEY):
         return set()
-    with open(path, encoding="utf-8") as f:
+    with open(ANSWER_KEY, encoding="utf-8") as f:
         return {r["report_number"] for r in csv.DictReader(f)}
 
 
@@ -380,7 +369,7 @@ def score():
             "SELECT COUNT(*) FROM reports WHERE event_type!='Death' AND COALESCE(hidden_death,0)=0 "
             "AND outcomes LIKE '%Death%'"),
     }
-    with open(os.path.join(EVAL, "death_summary.json"), "w", encoding="utf-8") as f:
+    with open(CLASSIFIER_SCORING, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
     print(json.dumps(summary, indent=2))
 
@@ -388,8 +377,8 @@ def score():
 def gold(seed: int = 7):
     """Write the hand-check set. Two people label it without seeing the model's answer.
 
-    eval/gold_blind.csv  what the checkers open: the text and an empty "died" column.
-    eval/gold_key.csv    where each report came from and its model score. Open only afterwards.
+    eval/hand_check/blind_set.csv   what the checkers open: the text and an empty "died" column.
+    eval/hand_check/answer_key.csv  where each report came from and its model score. Open only afterwards.
     The first 30 rows go to both checkers, to measure how often two people agree.
     """
     con = connect()
@@ -409,8 +398,8 @@ def gold(seed: int = 7):
             for r in rng.sample(part, min(n // 2, len(part))):
                 seen.add(r["report_number"]); picked.append((name, r))
     rng.shuffle(picked)
-    with open(os.path.join(EVAL, "gold_blind.csv"), "w", newline="", encoding="utf-8") as fb, \
-         open(os.path.join(EVAL, "gold_key.csv"), "w", newline="", encoding="utf-8") as fk:
+    with open(BLIND_SET, "w", newline="", encoding="utf-8") as fb, \
+         open(ANSWER_KEY, "w", newline="", encoding="utf-8") as fk:
         wb, wk = csv.writer(fb), csv.writer(fk)
         wb.writerow(["row", "checker", "report_number", "died (1 = this patient died, 0 = no, ? = cannot tell)",
                      "note", "narrative"])
@@ -420,7 +409,7 @@ def gold(seed: int = 7):
             who = "both" if i <= 30 else ("A" if i <= 30 + rest // 2 else "B")
             wb.writerow([i, who, r["report_number"], "", "", r["narrative"]])
             wk.writerow([i, r["report_number"], name, r["death_prob"], r["hidden_death"]])
-    print(f"wrote {len(picked)} reports to eval/gold_blind.csv (key in eval/gold_key.csv)")
+    print(f"wrote {len(picked)} reports to {BLIND_SET} (key in {ANSWER_KEY})")
 
 
 def main():

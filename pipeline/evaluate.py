@@ -1,6 +1,6 @@
 """Score four ways of finding hidden deaths against the hand-checked gold set.
 
-Usage:  python -m pipeline.evaluate            # needs eval/gold_A.csv and eval/gold_B.csv
+Usage:  python -m pipeline.evaluate            # needs eval/hand_check/checker_A.csv and checker_B.csv
         python -m pipeline.evaluate --no-llm   # skip the large-model comparison
 
 Methods compared, all on the same hand-checked reports:
@@ -17,14 +17,14 @@ import csv
 import json
 import os
 
-from .deaths import EVAL, has_death_word
+from .deathwords import has_death_word
+from .paths import ANSWER_KEY, CHECKERS, FINAL_RESULTS, LARGE_MODEL_ANSWERS, SAMPLING
 from .store import connect
 
-OUT = os.path.join(EVAL, "gold_results.json")
+OUT = FINAL_RESULTS
 
 
-def read_gold(name: str) -> dict:
-    path = os.path.join(EVAL, name)
+def read_gold(path: str) -> dict:
     if not os.path.exists(path):
         return {}
     with open(path, encoding="utf-8-sig") as f:
@@ -46,7 +46,7 @@ def kappa(pairs: list[tuple[str, str]]) -> float | None:
 
 def large_model_answers(rows: list[dict]) -> dict:
     """The large language model's answer for each gold report, saved so a rerun costs nothing."""
-    path = os.path.join(EVAL, "gold_large_model.csv")
+    path = LARGE_MODEL_ANSWERS
     done = {}
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
@@ -91,12 +91,12 @@ def main():
     ap.add_argument("--no-llm", action="store_true")
     args = ap.parse_args()
 
-    a, b = read_gold("gold_A.csv"), read_gold("gold_B.csv")
+    a, b = read_gold(CHECKERS["A"]), read_gold(CHECKERS["B"])
     if not a and not b:
-        raise SystemExit("No hand labels found. Save them as eval/gold_A.csv and eval/gold_B.csv.")
-    with open(os.path.join(EVAL, "gold_key.csv"), encoding="utf-8") as f:
+        raise SystemExit(f"No hand labels found. Expected {CHECKERS['A']} and {CHECKERS['B']}.")
+    with open(ANSWER_KEY, encoding="utf-8") as f:
         key = {r["report_number"]: r for r in csv.DictReader(f)}
-    with open(os.path.join(EVAL, "gold_strata.json"), encoding="utf-8") as f:
+    with open(SAMPLING, encoding="utf-8") as f:
         strata = json.load(f)
 
     both = [(a[k], b[k]) for k in a if k in b]
