@@ -44,7 +44,7 @@ The classifier trades recall for precision deliberately: a wrong "hidden death" 
 
 ## The problem
 
-- **Deaths are filed under the wrong category.** A published review of FDA device reports whose text described a patient death found that about 23% were filed as "injury", "malfunction" or "other" [1]. Anyone who counts only the FDA's "Death" field never sees them.
+- **Deaths are filed under the wrong category.** A published review of the FDA's device database estimated that about 17% of reports in which the patient died were filed as "injury", "malfunction", "other" or left blank instead of "death" [1]. Anyone who counts only the FDA's "Death" field never sees them.
 - **Manufacturers report late.** Federal rules give manufacturers 30 days to report a death or serious injury [3], and published work finds a large share of reports arrive after that deadline [2].
 - **Owners are not told.** Public-access AEDs are not registered to the people who own them, so a gym or school is often the last to hear about a recall.
 

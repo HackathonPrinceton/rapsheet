@@ -88,7 +88,7 @@ which may overstate lateness.
 |---|---|---|---|---|
 | Our data, 2019 to 2022 (159,640 reports) | 68.9% | 16.0% | 15.0% | 0.2% |
 | Our data, all years (416,862 reports) | 54.4% | 9.8% | 34.8% | 0.9% |
-| Published, all device types (Everhart et al., BMJ 2025; figure to be confirmed against the paper) | 71% | 4.5% | 9.1% | 15.5% |
+| Published, all device types, initial reports Sept 2019 to Dec 2022 (Everhart et al., BMJ 2025, checked against the paper's summary) | 71.0% | 4.5% | 9.1% | 15.5% |
 
 Our figures cover two device types only, so they are not expected to match the published ones.
 
