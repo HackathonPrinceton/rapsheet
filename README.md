@@ -6,9 +6,16 @@
 
 Rap Sheet turns the FDA's public adverse event and recall data into a plain-language record for one device: recalls, deaths, deaths filed under the wrong category, how late the manufacturer reports problems, and whether reports are rising. It answers by text message and links to a device page where every figure opens the FDA records it was counted from.
 
-**Live demo:** [54-172-47-121.sslip.io](https://54-172-47-121.sslip.io) · example: [LIFEPAK CR2 defibrillator](https://54-172-47-121.sslip.io/?d=physio--lifepak-cr2-defibrillator)
+**Live demo:** [54-172-47-121.sslip.io](https://54-172-47-121.sslip.io) · example: [LIFEPAK CR2 defibrillator](https://54-172-47-121.sslip.io/?d=physio--lifepak-cr2-defibrillator) · **Demo video:** [youtu.be/wYy-Tb_0ZMo](https://youtu.be/wYy-Tb_0ZMo)
 
 ![The device page for the LIFEPAK CR2 defibrillator: the record header, four facts and the four headline numbers](docs/screenshots/device-page.png)
+
+<table>
+<tr>
+<td width="32%" valign="top"><img src="docs/screenshots/text-reply.jpeg" alt="iMessage reply for the LIFEPAK CR2: 2 recalls, 7,186 reports, 48 coded deaths and 29 more filed as a malfunction or injury, with a link to the full record"><br><sub>The text reply after a photo of the label.</sub></td>
+<td valign="top"><img src="docs/screenshots/why-trust.png" alt="Why trust this: four ways to find hidden deaths compared on the same 181 hand-checked reports, the model's confidence chart, and the two reports it got wrong"><br><sub>Why trust this: four methods on the same 181 hand-checked reports, and the two flags the model got wrong.</sub></td>
+</tr>
+</table>
 
 **Why the name.** A rap sheet is the record a person carries of every time they were reported or charged. Medical devices have one too: the FDA's file of every problem ever reported about them. As with a person's record, an entry is an allegation, not a verdict, which is why every number here links to the report behind it.
 
