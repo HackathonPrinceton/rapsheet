@@ -97,7 +97,17 @@ Reply MORE, SAVE or STOP.
 | `SAVE <name>` | Adds the device to a watch list; the user is texted if a new recall or a rise in reports appears |
 | `STOP` | Removes the user and all saved devices |
 
-**3. Verify.** The link opens the device page: the headline numbers, a monthly timeline with recalls marked, the evidence behind each flag, and a link from every row to the FDA's own copy of the report.
+**3. Verify.** The link opens the device page, in five tabs:
+
+| Tab | What it shows |
+|---|---|
+| Overview | The four headline numbers; every death as one dot, split into filed as deaths and filed as something else; deaths per year; this device among every other model of its type; the strongest piece of evidence |
+| Evidence | Each flagged report with a "why this was flagged" card, and the full lists behind the other counts |
+| Timeline | Reports per month with recalls and unusual jumps marked, and the events in order |
+| Recalls & filing | Each recall with the words that matched it to the device, and how late the maker files compared with other makers |
+| Why trust this | How the numbers were checked by hand, the methods compared, and the model's known errors and limits |
+
+Any tab can be linked directly, for example `?d=<device_key>&tab=evidence`. For the LIFEPAK CR2, 29 of the 77 reports that describe a patient death were not filed as deaths, and 8 of those arrived in 2025 alone.
 
 ---
 
@@ -179,7 +189,7 @@ Every number on the page can be checked by the person reading it.
 - An [openFDA API key](https://open.fda.gov/apis/authentication/) (free; needed for large pages)
 - For messaging: a [Photon](https://photon.codes) project with an iMessage line
 - For label photos: an API key for the vision model used by [`service/matcher.py`](service/matcher.py)
-- For a public demo link: [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
+- Optional, to serve the page from a laptop over a public link: [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
 
 ### Install
 
@@ -200,7 +210,7 @@ cp .env.example .env
 | `ANTHROPIC_API_KEY` | Vision model access for reading label photos |
 | `RAPSHEET_VISION_MODEL` | Name of the vision model that reads label photos |
 | `LABEL_MODEL` | Name of the model used to label training data (needed only to relabel) |
-| `PAGE_BASE_URL` | Public address of the device page; set automatically by `start_demo.py` |
+| `PAGE_BASE_URL` | Public address of the device page that bot replies link to |
 
 ### Build the data
 
@@ -216,7 +226,7 @@ make scores                                              # load classifier score
 python start_demo.py
 ```
 
-This starts the device page, opens a public HTTPS tunnel to it, writes the address to `PAGE_BASE_URL` so replies link to it, and starts the messaging bot. Each part can also run alone:
+When `PAGE_BASE_URL` already points at a hosted page, this starts only the messaging bot. With `--tunnel` (or when no hosted page is set) it also starts the page on this machine, opens a public HTTPS tunnel to it and writes that address to `PAGE_BASE_URL`. Each part can also run alone:
 
 | Command | What it runs |
 |---|---|
@@ -226,7 +236,11 @@ This starts the device page, opens a public HTTPS tunnel to it, writes the addre
 | `uvicorn service.api:app --port 8000` | JSON API: `/search?q=` and `/device/{device_key}` |
 | `python -m bot.alerts --dry-run` | Shows which watch-list alerts would be sent |
 
-Without a database, the API and page serve [`data/sample_record.json`](data/sample_record.json), a made-up record for development that is labelled as such.
+### Hosting the page
+
+The live demo runs on one small AWS EC2 instance: Streamlit behind Caddy for HTTPS. It needs no database setup. When the full database is absent, the page unpacks [`data/rapsheet_demo.db.gz`](data/rapsheet_demo.db.gz), a compact copy built by `python -m pipeline.make_demo_db` that keeps full text only for the reports the page quotes and holds no user data. Install with `pip install -r page/requirements.txt`, which lists only what the page needs.
+
+Without a database or the demo copy, the API and page serve [`data/sample_record.json`](data/sample_record.json), a made-up record for development that is labelled as such.
 
 ---
 
