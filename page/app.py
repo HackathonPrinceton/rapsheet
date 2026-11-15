@@ -35,7 +35,7 @@ st.markdown(f"""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 html, body, [class*="css"], p, li, label {{ font-family: 'Inter', sans-serif; }}
 #MainMenu, footer, header [data-testid="stToolbar"] {{ visibility: hidden; }}
-.block-container {{ padding: 1rem 2.2rem 2rem; max-width: 100%; }}
+.block-container {{ padding: 3.6rem 2.2rem 2rem; max-width: 100%; }}
 .logo {{ font-weight: 800; font-size: 1.15rem; color: {INK}; display: flex; align-items: center; gap: .45rem; padding-top: .45rem; }}
 .logo .dot {{ width: .8rem; height: .8rem; border-radius: 50%; background: {BLUE}; box-shadow: 0 0 0 4px #dbeafe; }}
 .devhead {{ display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem;
@@ -91,7 +91,7 @@ a.btn {{ display: inline-block; margin-top: .7rem; font-size: .85rem; font-weigh
 .miss mark {{ background: #fed7aa; color: #9a3412; font-weight: 700; padding: 0 .1rem; border-radius: 3px; }}
 .miss .q {{ font-size: .85rem; color: #1f2937; margin: .45rem 0; line-height: 1.5; }}
 @media (max-width: 900px) {{ .kpis, .flow {{ grid-template-columns: repeat(2, 1fr); }} .wit {{ grid-template-columns: 1fr; }}
-  .block-container {{ padding: .8rem 1rem; }} }}
+  .block-container {{ padding: 3.4rem 1rem .8rem; }} }}
 </style>""", unsafe_allow_html=True)
 
 
@@ -242,6 +242,15 @@ if not rec:
                 "<div style='font-size:1.6rem;font-weight:800;color:#111827'>The safety record of any medical device</div>"
                 "<div style='margin-top:.5rem'>Search a device above. Every number comes from the FDA's public reports "
                 "and links to them.</div></div>", unsafe_allow_html=True)
+    # Starting points, so a first-time visitor has something to open. Only devices that are in the data.
+    examples = [(name, m[0]["device_key"]) for name in ("LIFEPAK CR2", "Zoll AED Plus", "HeartStart FRx", "DreamStation")
+                for m in [search(name)] if m]
+    if examples:
+        links = " ".join(f'<a href="?d={esc(k)}" target="_self" style="display:inline-block;margin:.3rem;padding:.55rem 1rem;'
+                         f'border:1px solid #cbd5e1;border-radius:999px;color:#111827;text-decoration:none;'
+                         f'font-weight:600">{esc(n)}</a>' for n, k in examples)
+        st.markdown(f"<div style='text-align:center;margin-top:-2.5rem'><div style='color:#6b7280;"
+                    f"margin-bottom:.4rem'>Or open an example:</div>{links}</div>", unsafe_allow_html=True)
     st.stop()
 
 d, t, m = rec["device"], rec["totals"], rec["manufacturer"]
