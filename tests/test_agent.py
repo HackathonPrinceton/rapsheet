@@ -5,12 +5,16 @@ our wiring: the tools run on the real data, the file is collected, and the citat
 """
 from typing import Any
 
-from conftest import needs_data
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage
-from langchain_core.outputs import ChatGeneration, ChatResult
+import pytest
 
-from agent.investigator import check_citations, investigate
+pytest.importorskip("deepagents")          # the Investigator is optional; skip its tests if it is not installed
+
+from conftest import needs_data  # noqa: E402
+from langchain_core.language_models.chat_models import BaseChatModel  # noqa: E402
+from langchain_core.messages import AIMessage  # noqa: E402
+from langchain_core.outputs import ChatGeneration, ChatResult  # noqa: E402
+
+from agent.investigator import check_citations, investigate  # noqa: E402
 
 MEMO = ("## Answer\nThe LIFEPAK CR2 has reports that describe a death but were filed as a malfunction.\n\n"
         "## Findings\n- The patient did not survive [report 0003015876-2025-01542].\n"
