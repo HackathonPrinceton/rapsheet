@@ -1,0 +1,6 @@
+# Only what the hosted page needs (Streamlit Community Cloud reads this file, next to app.py).
+# The full list for the pipeline and the bot is requirements.txt at the repo root.
+streamlit
+altair
+pandas
+numpy

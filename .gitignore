@@ -15,6 +15,7 @@ venv/
 data/*
 !data/sample_record.json
 !data/.gitkeep
+!data/rapsheet_demo.db.gz
 *.parquet
 *.sqlite
 *.db

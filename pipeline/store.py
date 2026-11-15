@@ -4,6 +4,22 @@ import re
 import sqlite3
 
 DB_PATH = os.environ.get("RAPSHEET_DB", os.path.join(os.path.dirname(__file__), "..", "data", "rapsheet.db"))
+# A small copy of the database for the hosted page (python -m pipeline.make_demo_db). Used only when the
+# full database is not there, so a laptop with real data is never affected.
+DEMO_GZ = os.path.join(os.path.dirname(__file__), "..", "data", "rapsheet_demo.db.gz")
+
+
+def _demo_db() -> str:
+    """Unpack the demo database once into the temp folder and return its path."""
+    import gzip
+    import shutil
+    import tempfile
+    out = os.path.join(tempfile.gettempdir(), "rapsheet_demo.db")
+    if not os.path.exists(out) or os.path.getmtime(out) < os.path.getmtime(DEMO_GZ):
+        with gzip.open(DEMO_GZ, "rb") as f, open(out + ".part", "wb") as g:
+            shutil.copyfileobj(f, g)
+        os.replace(out + ".part", out)
+    return out
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS reports (
@@ -39,6 +55,8 @@ CREATE TABLE IF NOT EXISTS watchlist (
 
 
 def connect(path: str = DB_PATH) -> sqlite3.Connection:
+    if path == DB_PATH and not os.path.exists(path) and os.path.exists(DEMO_GZ):
+        path = _demo_db()
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
