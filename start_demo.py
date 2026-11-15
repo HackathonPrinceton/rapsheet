@@ -62,8 +62,7 @@ def main():
         try:
             subprocess.run([sys.executable, "-m", "bot.photon_bot"], cwd=ROOT)
         except KeyboardInterrupt:
-            print("
-Stopping.")
+            print("Stopping.")
         return
     try:
         print("1/4 starting the page...")
